@@ -1,0 +1,583 @@
+================================================================================
+TECNICA HEURISTICA HAR — DOCUMENTACIÓN FINAL
+Programa principal: detect_action_json.py
+Herramientas de validación: validate_*, detectar filtrado, visualizar
+Proyecto: /home/ignacio/Escritorio/Company/Tecnica_Heuristica_HAR
+Fecha: 2026-09-06
+================================================================================
+
+ÍNDICE
+------
+  1.  Resumen ejecutivo
+  2.  Programa final vs herramientas de validación
+  3.  Estructura del proyecto
+  4.  Datos de entrada (videos/)
+  5.  Dependencias
+  6.  PROGRAMA FINAL: detect_action_json.py
+  7.  Formato del JSON de salida
+  8.  Variante filtrada (opcional): detect_action_filtered_json.py
+  9.  Herramientas de validación (detalle)
+ 10.  Arquitectura interna (librería har_pose)
+ 11.  Keypoints y geometría
+ 12.  Features
+ 13.  Filtrado temporal y FSM
+ 14.  Catálogo de etiquetas
+ 15.  Códigos de fiabilidad 0 / 1 / 2
+ 16.  Thresholds iniciales (DetectionConfig)
+ 17.  Qué calibrar
+ 18.  Limitaciones
+ 19.  Tests
+ 20.  Ejemplos rápidos de uso
+
+
+================================================================================
+1. RESUMEN EJECUTIVO
+================================================================================
+
+Sistema de HAR (Human Activity Recognition) heurístico sobre poses 2D
+(8 keypoints upper-body). Sin machine learning en esta versión.
+
+Flujo de producción:
+  videos/<clase>/<CLIP>/user_XXX/poses_full.npy
+       + meta.json (fps)
+       ↓
+  detect_action_json.py
+       ↓
+  output/<clase>/<CLIP>/user_XXX_poses_full_actions.json
+
+El JSON contiene TODOS los estados y acciones detectados (sin filtro),
+con timestamps, códigos de fiabilidad y metadatos.
+
+
+================================================================================
+2. PROGRAMA FINAL VS HERRAMIENTAS DE VALIDACIÓN
+================================================================================
+
+PROGRAMA FINAL (entrega / pipeline)
+-----------------------------------
+  detect_action_json.py
+      → Detecta TODAS las acciones y escribe un .json
+      → Este es el programa a usar en producción / integración
+
+HERRAMIENTAS DE VALIDACIÓN (se mantienen para inspección visual / debug)
+-----------------------------------------------------------------------
+  validate_realtime.py
+      Esqueleto .npy + panel de TODAS las acciones activas
+
+  validate_realtime_full.py
+      clip.mp4 + esqueleto superpuesto + TODAS las acciones
+
+  validate_realtime_wrist.py
+      Solo esqueleto + foco muñeca–tronco / muñecas juntas
+
+  validate_realtime_wrist_full.py
+      clip.mp4 + esqueleto + mismo foco de muñecas
+
+  visualizar_npy.py
+      Solo visualiza el .npy (sin detección)
+
+UTILIDADES AUXILIARES (también útiles, no son el entregable principal)
+----------------------------------------------------------------------
+  detect_actions.py
+      Misma detección que el JSON pero salida .txt clásica
+
+  detect_action_filtered_json.py
+      JSON solo con etiquetas de muñeca–tronco / juntas
+      (mismo filtro que validate_realtime_wrist*)
+
+
+================================================================================
+3. ESTRUCTURA DEL PROYECTO
+================================================================================
+
+Tecnica_Heuristica_HAR/
+├── detect_action_json.py              ★ PROGRAMA FINAL
+├── detect_action_filtered_json.py     (JSON filtrado muñecas)
+├── detect_actions.py                  (salida .txt todas)
+├── validate_realtime.py               (validación)
+├── validate_realtime_full.py          (validación + vídeo)
+├── validate_realtime_wrist.py         (validación muñecas)
+├── validate_realtime_wrist_full.py    (validación muñecas + vídeo)
+├── visualizar_npy.py                  (solo esqueleto)
+├── requirements.txt
+├── README.md
+├── INSTRUCCIONES_ESPECIFICACIONES_THRESHOLDS.txt
+├── caracteristicas_y_thresholds.txt
+├── DOCUMENTACION_FINAL.txt            ← ESTE ARCHIVO
+├── videos/                            DATOS
+│   └── <clase 0-7>/<CLIP>/
+│       ├── clip.mp4
+│       ├── meta.json
+│       └── user_<id>/poses_full.npy
+├── output/                            RESULTADOS
+│   └── <clase>/<CLIP>/*.json | *.txt
+├── har_pose/                          librería de detección
+│   ├── config.py
+│   ├── geometry.py
+│   ├── filters.py
+│   ├── features.py
+│   ├── temporal.py
+│   ├── detectors.py
+│   └── io_utils.py
+└── tests/test_har_pose.py
+
+
+================================================================================
+4. DATOS DE ENTRADA
+================================================================================
+
+Raíz de datos:
+  /home/ignacio/Escritorio/Company/Tecnica_Heuristica_HAR/videos/
+
+Estructura:
+  videos/<clase>/<CLIP_NAME>/user_<track_id>/poses_full.npy
+  videos/<clase>/<CLIP_NAME>/meta.json      ← campo "fps"
+  videos/<clase>/<CLIP_NAME>/clip.mp4       ← solo para validate_*_full
+
+Ejemplo por defecto (DEFAULT_NPY_RELATIVE):
+  videos/1/12Diciembre2025_12Diciembre2025_Cervezas_Cervezas_manana_002920_002950_1/user_136/poses_full.npy
+
+Formato .npy aceptado:
+  (T, 8, 2)      principal — frames × joints × (x,y) normalizados ~[0,1]
+  (T, 8, 3)      se usan solo x,y
+  (T, 2, 8, 2)   dos usuarios → usuario 0
+
+Convención imagen: y_down = True (y crece hacia abajo, OpenCV).
+
+Resolución de rutas (relativa a videos/):
+  python3 detect_action_json.py 1/CLIP/user_136/poses_full.npy
+  python3 detect_action_json.py videos/1/CLIP/user_136/poses_full.npy
+  python3 detect_action_json.py /ruta/absoluta/.../poses_full.npy
+
+FPS:
+  1) --fps en CLI (prioridad)
+  2) meta.json → "fps"
+  Si no hay ninguno → error.
+
+
+================================================================================
+5. DEPENDENCIAS
+================================================================================
+
+Obligatorias (detección / JSON):
+  numpy, scipy, (stdlib: json, pathlib, argparse, tkinter no necesario
+  para detect_action_json.py)
+
+Para validación visual:
+  Pillow, tkinter
+  opencv-python  → solo validate_*_full
+
+Instalación orientativa:
+  pip install -r requirements.txt
+  pip install opencv-python   # si usas validate_*_full
+
+
+================================================================================
+6. PROGRAMA FINAL: detect_action_json.py
+================================================================================
+
+Qué hace:
+  1. Resuelve el .npy bajo videos/
+  2. Lee FPS de meta.json (o --fps)
+  3. Ejecuta ActionAnalysisPipeline (todas las etiquetas)
+  4. Escribe un JSON con todos los segmentos
+
+Ejecución:
+  cd /home/ignacio/Escritorio/Company/Tecnica_Heuristica_HAR
+
+  # Clip por defecto
+  python3 detect_action_json.py
+
+  # Otro clip
+  python3 detect_action_json.py 1/OTRO_CLIP/user_136/poses_full.npy
+
+  # Forzar FPS
+  python3 detect_action_json.py --fps 12.38
+
+  # Imprimir por stdout
+  python3 detect_action_json.py --stdout
+
+  # Solo stdout, sin fichero
+  python3 detect_action_json.py --stdout --no-save
+
+  # Ruta de salida custom
+  python3 detect_action_json.py -o /tmp/acciones.json
+
+Opciones:
+  npy                 ruta relativa a videos/ (opcional)
+  --fps FLOAT         fuerza FPS
+  -o / --output PATH  ruta exacta del JSON
+  --output-dir DIR    raíz (default ./output); anida <clase>/<CLIP>/
+  --stdout            imprime JSON por stdout
+  --no-save           no escribe fichero
+  --indent N          indentación JSON (default 2)
+
+Salida por defecto:
+  output/<clase>/<CLIP>/user_XXX_poses_full_actions.json
+
+Mensajes de progreso van a stderr; el JSON puro puede ir a stdout.
+
+
+================================================================================
+7. FORMATO DEL JSON DE SALIDA
+================================================================================
+
+Estructura:
+
+{
+  "source": "<ruta absoluta al .npy>",
+  "fps": 12.38,
+  "fps_source": "<ruta meta.json | cli>",
+  "num_frames": 370,
+  "duration_s": 29.886914,
+  "filter": null,                    ← null = sin filtro (todas)
+  "num_segments": 44,
+  "segments": [
+    {
+      "action": "ARM_EXTENDED_LEFT",
+      "start_frame": 0,
+      "end_frame": 40,
+      "start": "00:00:00.000",
+      "end": "00:00:03.312",
+      "start_s": 0.0,
+      "end_s": 3.312,
+      "duration_s": 3.312,
+      "code": 0,
+      "feature": "elbow_angle_L",
+      "reason": "...",
+      "enter_threshold": 155.0,
+      "exit_threshold": 140.0
+    },
+    ...
+  ],
+  "unsupported_2d": [
+    {"action": "ARM_FORWARD_DEPTH", "code": 2},
+    {"action": "ARM_BACKWARD_DEPTH", "code": 2},
+    {"action": "HAND_FRONT_BACK", "code": 2},
+    {"action": "TORSO_ROTATION_3D_EXACT", "code": 2},
+    {"action": "SHOULDER_ANGLE_3D", "code": 2},
+    {"action": "WRIST_DEPTH", "code": 2}
+  ]
+}
+
+Notas:
+  - Varios segmentos pueden solaparse (no es clasificación exclusiva).
+  - code: 0=verde, 1=amarillo (heurística), 2=rojo (listado unsupported,
+    nunca como segmento detectado).
+  - Timestamps: frame i → t = i / fps → HH:MM:SS.mmm
+
+
+================================================================================
+8. VARIANTE FILTRADA (OPCIONAL)
+================================================================================
+
+detect_action_filtered_json.py
+  Igual que el final, pero solo:
+    WRIST_NEAR_*, WRIST_TO_*, BOTH_/ANY_WRIST_NEAR_*,
+    WRISTS_TOGETHER, JOIN_HANDS
+
+  Salida:
+    ..._wrist_focus_actions.json
+  Campo "filter": lista de tags aplicados.
+
+Usar si solo interesa proximidad muñeca–tronco / manos juntas.
+
+
+================================================================================
+9. HERRAMIENTAS DE VALIDACIÓN (DETALLE)
+================================================================================
+
+9.1 validate_realtime.py
+------------------------
+  python3 validate_realtime.py
+  python3 validate_realtime.py 1/CLIP/user_136/poses_full.npy --save-txt
+  --filter WRIST_NEAR   (opcional, filtra por nombre)
+
+9.2 validate_realtime_full.py
+-----------------------------
+  python3 validate_realtime_full.py
+  Requiere OpenCV. Busca clip.mp4 en la carpeta del CLIP.
+
+9.3 validate_realtime_wrist.py / validate_realtime_wrist_full.py
+----------------------------------------------------------------
+  Solo etiquetas de muñeca–tronco / juntas.
+  Banner en pantalla + muñecas resaltadas cuando hay detección.
+
+Controles UI (todas las validate_*):
+  Espacio     pausa
+  ← / →       frame ±1
+  ↑ / ↓       ±10 frames
+  Home / End  inicio / fin
+  [ / ]       velocidad
+  F           (en validate_realtime / full) solo CODE=0
+  Q / Esc     salir
+
+9.4 visualizar_npy.py
+---------------------
+  Solo reproduce el esqueleto, sin detectar acciones.
+
+
+================================================================================
+10. ARQUITECTURA INTERNA (har_pose)
+================================================================================
+
+Pipeline:
+  .npy
+    → PoseSequence
+    → FeatureExtractor (suavizado + geometría + derivadas)
+    → StateDetector (histeresis → estados)
+    → ActionDetector (FSM → acciones dinámicas)
+    → SegmentProcessor (merge gaps + duración mínima)
+    → JSON / TXT / UI
+
+Módulos:
+  config.py     KEYPOINTS, DetectionConfig, UNSUPPORTED_2D, rutas
+  geometry.py   ángulos, distancias, lean (NaN-safe)
+  filters.py    savgol / media / mediana + derivadas
+  features.py   extracción de series temporales
+  temporal.py   histeresis, merge, duración mínima
+  detectors.py  StateDetector, ActionDetector, pipeline
+  io_utils.py   load npy, fps, rutas, timestamps, escritura
+
+
+================================================================================
+11. KEYPOINTS Y GEOMETRÍA
+================================================================================
+
+KEYPOINTS (config centralizada):
+  0 left_shoulder   1 right_shoulder
+  2 left_elbow      3 right_elbow
+  4 left_wrist      5 right_wrist
+  6 left_hip        7 right_hip
+
+Centros:
+  Sc = media hombros
+  Hc = media caderas
+  C  = 0.65·Sc + 0.35·Hc     (pecho aproximado)
+
+Escala corporal:
+  scale = 0.55·ancho_hombros + 0.45·||Sc−Hc||
+  floor min_body_scale = 1e-3
+
+Ángulo codo: ángulo en codo del triángulo hombro–codo–muñeca [0,180°]
+  ~180° ≈ extendido/recto
+
+
+================================================================================
+12. FEATURES (resumen)
+================================================================================
+
+  elbow_angle_L/R
+  wrist_waist_L/R, wrist_chest_L/R, wrist_shoulder_L/R, wrists_apart
+  wrist_height_sh_L/R, lateral/cross/open_*
+  torso_lean, shoulder_hip_twist, frontal_ratio, shoulder_width
+  velocidades y derivadas d_* tras suavizado
+
+
+================================================================================
+13. FILTRADO TEMPORAL Y FSM
+================================================================================
+
+Suavizado: savgol window=5, polyorder=2 (fallback media/mediana)
+Histeresis: umbrales enter ≠ exit
+Duración mínima: estados 0.20 s | acciones 0.12 s
+Merge gaps: 0.12 s
+
+Estados = persistencia (ej. ARM_EXTENDED_LEFT)
+Acciones = transición FSM (ej. EXTEND_ARM_LEFT)
+  No se etiquetan solo porque el vídeo empiece ya en el estado final.
+
+
+================================================================================
+14. CATÁLOGO DE ETIQUETAS
+================================================================================
+
+CODE 0 — estados (ejemplos; muchos con _LEFT/_RIGHT):
+  ARM_EXTENDED_*, ARM_FLEXED_*, ELBOW_ALMOST_STRAIGHT_*, ARM_TUCKED_*
+  WRIST_NEAR_WAIST_*, WRIST_NEAR_CHEST_*, WRIST_NEAR_TORSO_*, WRIST_NEAR_SHOULDER_*
+  ARM_ELEVATED_*, ARM_DOWN_*, ARM_HORIZONTAL_*
+  BOTH_WRISTS_NEAR_CHEST/WAIST, ANY_WRIST_NEAR_CHEST/WAIST
+  WRISTS_TOGETHER, WRISTS_APART, ARMS_OPEN_LATERAL
+  WRISTS_ABOVE_SHOULDERS, BOTH_ARMS_ELEVATED
+  TORSO_LEAN_LEFT / TORSO_LEAN_RIGHT
+
+CODE 0 — acciones dinámicas:
+  EXTEND_ARM_*, RETRACT_ARM_*
+  WRIST_TO_WAIST_*, WRIST_TO_CHEST_*
+  RAISE_ARM_*, LOWER_ARM_*
+  JOIN_HANDS, SEPARATE_HANDS
+  OPEN_ARMS_LATERAL, CLOSE_ARMS_LATERAL
+
+CODE 1 — heurísticas de perspectiva:
+  HAND_CROSS_MIDLINE_*, ARMS_CROSSED
+  PERSON_FRONTAL_HEURISTIC, PERSON_PROFILE_HEURISTIC
+  SHOULDER_HIP_TWIST_HEURISTIC
+  PARTIAL_TORSO_ROTATION_HEURISTIC
+  BODY_TURN_LEFT_HEURISTIC, BODY_TURN_RIGHT_HEURISTIC
+
+CODE 2 — unsupported (solo listadas en JSON, nunca detectadas):
+  ARM_FORWARD_DEPTH, ARM_BACKWARD_DEPTH, HAND_FRONT_BACK
+  TORSO_ROTATION_3D_EXACT, SHOULDER_ANGLE_3D, WRIST_DEPTH
+
+
+================================================================================
+15. CÓDIGOS DE FIABILIDAD
+================================================================================
+
+  0  VERDE     Condición 2D geométrica razonablemente robusta
+  1  AMARILLO  Heurística de perspectiva / foreshortening (NO es 3D)
+  2  ROJO      No observable de forma fiable en 2D; no se inventa
+
+
+================================================================================
+16. THRESHOLDS INICIALES (DetectionConfig)
+================================================================================
+
+Archivo: har_pose/config.py
+IMPORTANTE: valores de partida. Calibrar con datos reales.
+
+Geometría:
+  chest_alpha=0.65
+  scale_shoulder_weight=0.55  scale_torso_weight=0.45
+  min_body_scale=1e-3
+
+Codos (grados):
+  elbow_extended_enter/exit   = 155 / 140
+  elbow_straight_enter/exit   = 165 / 155
+  elbow_flexed_enter/exit     =  95 / 110
+  arm_tucked_wrist_chest_norm = 0.55
+
+Distancias normalizadas (× escala):
+  wrist_waist   enter/exit = 0.45 / 0.60
+  wrist_chest   enter/exit = 0.40 / 0.55
+  wrist_shoulder enter/exit= 0.35 / 0.50
+  wrists_together enter/exit= 0.35 / 0.50
+  wrists_apart    enter/exit= 1.10 / 0.90
+
+Alturas:
+  arm_elevated enter/exit = 0.25 / 0.10
+  arm_down     enter/exit = -0.35 / -0.20
+  arm_horizontal enter/exit abs = 0.18 / 0.28
+  wrist_above_shoulder enter/exit = 0.15 / 0.05
+
+Apertura / lean:
+  arms_open enter/exit = 0.55 / 0.35
+  torso_lean enter/exit deg = 12 / 7
+
+Heurísticas CODE=1:
+  cross_midline enter/exit = 0.12 / 0.05
+  frontal_ratio enter/exit = 0.55 / 0.40
+  profile_ratio enter/exit = 0.28 / 0.38
+  shoulder_hip_twist enter/exit deg = 18 / 10
+  shoulder_width_change_enter = 0.25
+  body_turn_lean_enter_deg = 8
+
+Acciones FSM:
+  extend/retract_delta_elbow_deg = 25
+  approach_delta_norm = 0.25
+  min_action_speed_norm_s = 0.15
+  hands_sep_delta_norm = 0.30
+  raise_delta_height = 0.30
+  open_close_delta = 0.30
+  action_min_frames = 3
+
+Temporal:
+  smooth_window=5  smooth_method="savgol"  savgol_polyorder=2
+  velocity_smooth_window=5
+  min_state_duration_s=0.20
+  min_action_duration_s=0.12
+  merge_gap_s=0.12
+  y_down=True
+
+
+================================================================================
+17. QUÉ CALIBRAR
+================================================================================
+
+Alta prioridad:
+  1. Ángulos de codo (extended / flexed / straight)
+  2. Distancias muñeca–cintura / pecho
+  3. Duraciones mínimas y merge_gap según FPS
+  4. Deltas de acciones dinámicas
+
+Media:
+  5. Elevación / brazo abajo
+  6. Ventana de suavizado
+
+Baja (solo si usas CODE=1):
+  7. Ratios frontal/perfil, cross_midline
+
+Método: validar con validate_realtime_full / wrist_full → ajustar
+DetectionConfig → regenerar con detect_action_json.py
+
+
+================================================================================
+18. LIMITACIONES
+================================================================================
+
+18.1 No hay profundidad 2D
+  No se puede afirmar delante/atrás de un brazo, profundidad de muñeca,
+  ni rotación 3D exacta del torso. Por eso CODE=2 no se detecta.
+
+18.2 Perspectiva / foreshortening
+  Ángulos y distancias 2D cambian con la cámara. CODE=1 es heurística,
+  no medición 3D.
+
+18.3 Calidad del .npy
+  NaNs, oclusiones, errores de tracking YOLO se heredan.
+
+18.4 Alineación vídeo–pose
+  Si clip.mp4 y poses_full.npy difieren en nº de frames, la UI full
+  puede desfasarse al final. El FPS incorrecto desplaza timestamps.
+
+18.5 Sobredetección
+  Muchas etiquetas pueden coexistir. Usar validate_* o el JSON filtrado
+  para centrarse. No usar en producción crítica sin calibrar.
+
+
+================================================================================
+19. TESTS
+================================================================================
+
+  python3 -m unittest tests.test_har_pose -v
+
+Cubren geometría, histeresis, merge, duración mínima, transición
+flex→extend, CODE=2 nunca detectado, etc.
+
+
+================================================================================
+20. EJEMPLOS RÁPIDOS
+================================================================================
+
+cd /home/ignacio/Escritorio/Company/Tecnica_Heuristica_HAR
+
+# ★ Programa final — todas las acciones → JSON
+python3 detect_action_json.py
+python3 detect_action_json.py 1/12Diciembre2025_12Diciembre2025_Cervezas_Cervezas_manana_004048_004128_1/user_136/poses_full.npy
+
+# Validar visualmente (todas las acciones + vídeo)
+python3 validate_realtime_full.py
+
+# Validar solo muñeca–tronco / juntas + vídeo
+python3 validate_realtime_wrist_full.py
+
+# JSON solo muñecas (opcional)
+python3 detect_action_filtered_json.py
+
+
+================================================================================
+ADVERTENCIA FINAL
+================================================================================
+
+detect_action_json.py analiza PROYECCIONES 2D.
+  CODE 0 → más defendible geométricamente
+  CODE 1 → heurística de perspectiva (no 3D real)
+  CODE 2 → no se detecta; falta información de profundidad
+
+No presentar heurísticas CODE=1 como mediciones 3D.
+Calibrar thresholds antes de uso serio.
+
+
+================================================================================
+Fin del documento
+================================================================================
