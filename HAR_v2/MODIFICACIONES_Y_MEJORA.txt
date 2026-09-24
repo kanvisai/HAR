@@ -1,0 +1,124 @@
+================================================================================
+MODIFICACIONES Y MEJORA DEL DETECTOR HAR
+Proyecto: Tecnica_Heuristica_HAR
+Fecha: 2026-09-24
+================================================================================
+
+1. CONTEXTO
+-----------
+La primera versión del detector (conservada en Tecnica_Heuristica_HAR_testing)
+generaba muchas acciones/estados de corta duración: útil como detector “crudo”,
+pero ruidoso para validación visual e integración.
+
+En esta versión del directorio Tecnica_Heuristica_HAR se adoptó como
+configuración por defecto la variante que antes se llamaba “_mod”:
+mismas acciones, pero segmentos más estables (menos y más largos).
+
+
+2. QUÉ SE MODIFICÓ
+------------------
+Archivo: har_pose/config.py  →  class DetectionConfig
+
+2.1 Filtrado temporal (cambio principal)
+  Antes (testing/base)     Ahora (estable)
+  min_state_duration_s     0.20 s   →   0.80 s
+  min_action_duration_s    0.12 s   →   0.45 s
+  merge_gap_s              0.12 s   →   0.70 s
+  action_min_frames        3        →   5
+
+  Efecto:
+  - Se descartan micro-segmentos demasiado cortos.
+  - Si la misma etiqueta desaparece y reaparece en < 0.70 s, se fusiona
+    en un único intervalo continuo.
+  - Resultado: menos filas en el JSON y duraciones más interpretables.
+
+2.2 Suavizado
+  smooth_window            5   →   11
+  velocity_smooth_window   5   →   9
+
+  Efecto: features menos nerviosas → menos cruces espurios de umbral.
+
+2.3 Histeresis algo más ancha (ejemplos)
+  Codos extended:  enter/exit  155/140  →  158/135
+  Muñeca–cintura:  enter/exit  0.45/0.60 →  0.48/0.72
+  Muñeca–pecho:    enter/exit  0.40/0.55 →  0.42/0.68
+
+  Efecto: menos flickering al entrar/salir de un estado.
+
+2.4 Acciones dinámicas más exigentes
+  extend/retract_delta_elbow_deg  25 → 30
+  approach_delta_norm             0.25 → 0.30
+  raise_delta_height              0.30 → 0.35
+  etc.
+
+  Efecto: se reducen micro-acciones de transición poco significativas.
+
+
+3. EVIDENCIA DE LA MEJORA (evaluación)
+--------------------------------------
+Se comparó BASE (config antigua) vs esta config estable en todos los
+clips de videos/2/ y videos/6/ (46 secuencias .npy).
+
+Resultado agregado:
+  Segmentos totales:     3909  →  2153   (−44.9 %)
+  Duración media:        2.95 s →  5.56 s  (+2.61 s)
+  Segmentos < 1 segundo: 1814  →  251    (−1563)
+
+Por clase:
+  videos/2/ (40 seq.):  3448 → 1874  (−45.6 %)
+  videos/6/ (6 seq.):    461 →  279  (−39.5 %)
+
+Informes detallados (generados en la fase de testing):
+  output/_comparativa_2_y_6_base_vs_mod/comparativa_2_y_6_base_vs_mod.txt
+  output/_comparativa_2_y_6_base_vs_mod/comparativa_por_secuencia.csv
+
+
+4. TRADE-OFF (qué se gana / qué se pierde)
+------------------------------------------
+Se gana:
+  - Menos ruido y parpadeo en el panel de validación.
+  - JSON más corto y legible.
+  - Intervalos más cercanos a “periodos de actividad” reales.
+
+Se pierde / riesgo:
+  - Gestos muy cortos pero reales pueden descartarse o fusionarse.
+  - Si hace falta máxima sensibilidad temporal, habría que bajar
+    min_action_duration_s o merge_gap_s solo para ciertas etiquetas.
+
+Conclusión práctica:
+  Para validación e integración, esta configuración es preferible a la
+  versión “cruda”. La versión completa anterior permanece en:
+
+    /home/ignacio/Escritorio/Company/Tecnica_Heuristica_HAR_testing
+
+
+5. PROGRAMAS ACTUALES (sin sufijo _mod)
+---------------------------------------
+Programa principal:
+  python3 detect_action_json.py [ruta_relativa_a_videos/]
+
+Validación:
+  python3 validate_realtime_full.py [ruta]
+  python3 validate_realtime.py [ruta]
+  python3 validate_realtime_wrist.py [ruta]
+  python3 validate_realtime_wrist_full.py [ruta]
+
+Opcional filtrado muñecas → JSON:
+  python3 detect_action_filtered_json.py [ruta]
+
+Salida TXT (todas las acciones):
+  python3 detect_actions.py [ruta]
+
+
+6. CÓMO REVERTIR O REAFINAR
+---------------------------
+Los umbrales viven solo en har_pose/config.py (DetectionConfig).
+Para volver a un comportamiento más sensible, reducir por ejemplo:
+  min_state_duration_s, min_action_duration_s, merge_gap_s, smooth_window
+
+Para aún más estabilidad, subir merge_gap_s y las duraciones mínimas.
+
+
+================================================================================
+Fin del documento
+================================================================================

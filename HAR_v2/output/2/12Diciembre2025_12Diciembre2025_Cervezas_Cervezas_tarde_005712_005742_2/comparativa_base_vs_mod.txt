@@ -1,0 +1,107 @@
+==============================================================================
+COMPARATIVA BASE vs MOD — detect_action_json
+Clip: 12Diciembre2025_..._tarde_005712_005742_2 / user_603
+==============================================================================
+
+Fuente NPY: /home/ignacio/Escritorio/Company/Tecnica_Heuristica_HAR/videos/2/12Diciembre2025_12Diciembre2025_Cervezas_Cervezas_tarde_005712_005742_2/user_603/poses_full.npy
+FPS: 12.333333   duración clip (npy): 27.649s
+
+JSON BASE: output/2/12Diciembre2025_12Diciembre2025_Cervezas_Cervezas_tarde_005712_005742_2/user_603_poses_full_actions.json
+JSON MOD:  output/2/12Diciembre2025_12Diciembre2025_Cervezas_Cervezas_tarde_005712_005742_2/user_603_poses_full_actions_mod.json
+
+------------------------------------------------------------------------------
+RESUMEN GLOBAL
+------------------------------------------------------------------------------
+Métrica                                  BASE          MOD            Δ
+-------------------------------- ------------ ------------ ------------
+num_segments                              109           68          -41
+acciones distintas                         41           34           -7
+duración media (s)                      3.834        6.292       +2.458
+duración mediana (s)                    1.946        4.095       +2.149
+duración mín (s)                        0.162        0.486       +0.324
+duración máx (s)                       17.189       17.108       -0.081
+segmentos < 0.5s                           23            1          -22
+segmentos < 1.0s                           43           11          -32
+segmentos ≥ 5.0s                           32           33           +1
+
+Por código BASE: {0: 76, 1: 33}
+Por código MOD:  {0: 46, 1: 22}
+
+------------------------------------------------------------------------------
+POR ACCIÓN  (count BASE → MOD | mean_s BASE → MOD)
+------------------------------------------------------------------------------
+ACTION                                     nB   nM   Δn   meanB   meanM
+---------------------------------------- ---- ---- ---- ------- -------
+PARTIAL_TORSO_ROTATION_HEURISTIC           13    8   +5    0.86    1.23
+ARMS_CROSSED                                4    4   +0    2.37    2.41
+JOIN_HANDS                                  5    4   +1    3.05    3.20
+HAND_CROSS_MIDLINE_LEFT                     3    3   +0    7.49    7.49
+HAND_CROSS_MIDLINE_RIGHT                    4    3   +1    2.96    4.05
+PERSON_PROFILE_HEURISTIC                    3    3   +0    6.76    6.73
+RETRACT_ARM_RIGHT                           3    0   +3    0.22    0.00
+WRISTS_TOGETHER                             5    3   +2    2.06    4.08
+ANY_WRIST_NEAR_WAIST                        2    2   +0   11.35   11.35
+ARM_DOWN_LEFT                               3    2   +1    8.51   12.89
+ARM_DOWN_RIGHT                              2    2   +0   11.76   11.76
+ARM_EXTENDED_LEFT                           2    2   +0   10.99   11.03
+ARM_EXTENDED_RIGHT                          2    2   +0   11.19   11.11
+BOTH_WRISTS_NEAR_WAIST                      4    2   +2    4.89   11.23
+ELBOW_ALMOST_STRAIGHT_LEFT                  4    2   +2    5.27   10.91
+ELBOW_ALMOST_STRAIGHT_RIGHT                 4    2   +2    2.98    7.18
+RETRACT_ARM_LEFT                            2    0   +2    0.24    0.00
+SEPARATE_HANDS                              2    2   +0   11.92   11.92
+WRIST_NEAR_TORSO_LEFT                       5    2   +3    4.48   13.09
+WRIST_NEAR_TORSO_RIGHT                      2    2   +0   11.27   11.31
+WRIST_NEAR_WAIST_LEFT                       4    2   +2    4.93   11.27
+WRIST_NEAR_WAIST_RIGHT                      2    2   +0   11.27   11.31
+ANY_WRIST_NEAR_CHEST                        1    1   +0    2.68    3.00
+ARM_ELEVATED_LEFT                           1    0   +1    0.32    0.00
+ARM_ELEVATED_RIGHT                          1    1   +0    3.73    3.73
+ARM_FLEXED_LEFT                             3    1   +2    1.68    4.46
+ARM_FLEXED_RIGHT                            2    1   +1    0.57    0.81
+ARM_HORIZONTAL_LEFT                         2    1   +1    0.73    1.62
+ARM_TUCKED_LEFT                             2    1   +1    1.50    3.16
+BOTH_ARMS_ELEVATED                          1    0   +1    0.32    0.00
+LOWER_ARM_LEFT                              2    1   +1    0.77    1.38
+LOWER_ARM_RIGHT                             1    1   +0    0.81    0.81
+PERSON_FRONTAL_HEURISTIC                    1    0   +1    0.41    0.00
+RAISE_ARM_LEFT                              1    1   +0    1.22    1.70
+RAISE_ARM_RIGHT                             1    1   +0    1.22    1.46
+SHOULDER_HIP_TWIST_HEURISTIC                5    1   +4    1.09    6.16
+WRISTS_ABOVE_SHOULDERS                      1    0   +1    0.32    0.00
+WRISTS_APART                                1    1   +0    3.24    3.16
+WRIST_NEAR_CHEST_LEFT                       1    1   +0    2.68    3.00
+WRIST_NEAR_SHOULDER_LEFT                    1    1   +0    1.30    1.38
+WRIST_TO_CHEST_LEFT                         1    0   +1    0.49    0.00
+
+------------------------------------------------------------------------------
+TOP reducciones de nº de segmentos (BASE count - MOD count)
+------------------------------------------------------------------------------
+  PARTIAL_TORSO_ROTATION_HEURISTIC: 13 → 8  (Δ -5)  mean 0.86s → 1.23s
+  SHOULDER_HIP_TWIST_HEURISTIC: 5 → 1  (Δ -4)  mean 1.09s → 6.16s
+  RETRACT_ARM_RIGHT: 3 → 0  (Δ -3)  mean 0.22s → 0.00s
+  WRIST_NEAR_TORSO_LEFT: 5 → 2  (Δ -3)  mean 4.48s → 13.09s
+  WRISTS_TOGETHER: 5 → 3  (Δ -2)  mean 2.06s → 4.08s
+  BOTH_WRISTS_NEAR_WAIST: 4 → 2  (Δ -2)  mean 4.89s → 11.23s
+  ELBOW_ALMOST_STRAIGHT_LEFT: 4 → 2  (Δ -2)  mean 5.27s → 10.91s
+  ELBOW_ALMOST_STRAIGHT_RIGHT: 4 → 2  (Δ -2)  mean 2.98s → 7.18s
+  RETRACT_ARM_LEFT: 2 → 0  (Δ -2)  mean 0.24s → 0.00s
+  WRIST_NEAR_WAIST_LEFT: 4 → 2  (Δ -2)  mean 4.93s → 11.27s
+  ARM_FLEXED_LEFT: 3 → 1  (Δ -2)  mean 1.68s → 4.46s
+  JOIN_HANDS: 5 → 4  (Δ -1)  mean 3.05s → 3.20s
+  HAND_CROSS_MIDLINE_RIGHT: 4 → 3  (Δ -1)  mean 2.96s → 4.05s
+  ARM_DOWN_LEFT: 3 → 2  (Δ -1)  mean 8.51s → 12.89s
+  ARM_ELEVATED_LEFT: 1 → 0  (Δ -1)  mean 0.32s → 0.00s
+
+------------------------------------------------------------------------------
+INTERPRETACIÓN
+------------------------------------------------------------------------------
+- El modo MOD reduce el número de segmentos en ~37.6% (109 → 68).
+- La duración media por segmento pasa de 3.83s a 6.29s.
+- Segmentos cortos (<1s): 43 → 11.
+- Misma familia de etiquetas; cambia el filtrado temporal (merge_gap, duración mínima, suavizado).
+
+Parámetros MOD clave (har_pose/config_mod.py):
+  min_state_duration_s=0.80  min_action_duration_s=0.45  merge_gap_s=0.70
+  smooth_window=11  action_min_frames=5
+==============================================================================

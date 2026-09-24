@@ -1,0 +1,804 @@
+================================================================================
+TECNICA HEURISTICA HAR — MANUAL COMPLETO
+Instrucciones · Especificaciones · Thresholds · Limitaciones
+Proyecto: /home/ignacio/Escritorio/Company/Tecnica_Heuristica_HAR
+Versión documentación: 2026-09-05
+================================================================================
+
+ÍNDICE
+------
+  1.  Resumen del sistema
+  2.  Estructura del proyecto
+  3.  Datos de entrada (videos/, .npy, meta.json, clip.mp4)
+  4.  Dependencias
+  5.  Programas CLI e instrucciones de ejecución
+  6.  Resolución automática de rutas y FPS
+  7.  Formato de salida (.txt)
+  8.  Arquitectura interna
+  9.  Keypoints y convenciones geométricas
+ 10.  Features calculadas
+ 11.  Filtrado temporal (suavizado, histeresis, gaps, duración)
+ 12.  Estados vs acciones (FSM)
+ 13.  Catálogo de etiquetas detectadas
+ 14.  Códigos de fiabilidad (0 / 1 / 2)
+ 15.  Thresholds iniciales (DetectionConfig) — detalle completo
+ 16.  Qué calibrar con datos reales
+ 17.  Limitaciones (detalle)
+ 18.  Controles de las UIs de validación
+ 19.  Tests
+ 20.  Notas de mantenimiento
+
+
+================================================================================
+1. RESUMEN DEL SISTEMA
+================================================================================
+
+Programa de Human Activity Recognition (HAR) basado en REGLAS GEOMÉTRICAS
+heurísticas sobre esqueletos 2D (8 keypoints de torso/brazos).
+
+NO usa machine learning en esta versión.
+
+Entrada típica:
+  - poses_full.npy  →  shape (T, 8, 2), coordenadas normalizadas ~[0,1]
+  - meta.json       →  fps del clip (y metadatos)
+  - clip.mp4        →  vídeo del clip (solo para validación visual full)
+
+Salida típica:
+  - .txt con segmentos: ACTION | START | END | DURATION | CODE
+  - ubicado en output/<clase>/<CLIP>/
+
+Objetivo:
+  Detectar estados corporales persistentes y acciones dinámicas (transiciones),
+  con filtrado temporal anti-ruido, códigos de fiabilidad 0/1/2, y herramientas
+  de validación visual in-situ.
+
+
+================================================================================
+2. ESTRUCTURA DEL PROYECTO
+================================================================================
+
+Tecnica_Heuristica_HAR/
+├── detect_actions.py              # CLI: detección → .txt
+├── validate_realtime.py           # UI: solo esqueleto .npy + acciones
+├── validate_realtime_full.py      # UI: clip.mp4 + esqueleto + acciones
+├── visualizar_npy.py              # UI: solo esqueleto (sin detección)
+├── requirements.txt
+├── README.md
+├── caracteristicas_y_thresholds.txt   # resumen corto
+├── INSTRUCCIONES_ESPECIFICACIONES_THRESHOLDS.txt  # ESTE ARCHIVO
+├── videos/                        # DATOS (clases 0..7)
+│   └── <clase>/
+│       └── <CLIP_NAME>/
+│           ├── clip.mp4
+│           ├── meta.json
+│           └── user_<id>/
+│               ├── poses_full.npy
+│               ├── poses.npy
+│               └── valid_mask.npy
+├── output/                        # RESULTADOS
+│   └── <clase>/<CLIP_NAME>/..._actions.txt
+├── har_pose/                      # librería
+│   ├── config.py                  # KEYPOINTS, DetectionConfig, rutas
+│   ├── geometry.py                # ángulos, distancias, lean
+│   ├── filters.py                 # savgol / media / mediana + derivadas
+│   ├── features.py                # PoseSequence, FeatureExtractor
+│   ├── temporal.py                # histeresis, merge, duración mínima
+│   ├── detectors.py               # StateDetector, ActionDetector, pipeline
+│   └── io_utils.py                # load npy, fps, rutas, escritura txt
+└── tests/
+    └── test_har_pose.py
+
+
+================================================================================
+3. DATOS DE ENTRADA
+================================================================================
+
+3.1 Carpeta videos/
+-------------------
+Ruta absoluta típica:
+  /home/ignacio/Escritorio/Company/Tecnica_Heuristica_HAR/videos/
+
+Estructura:
+  videos/<clase 0-7>/<CLIP_NAME>/user_<track_id>/poses_full.npy
+  videos/<clase>/<CLIP_NAME>/clip.mp4
+  videos/<clase>/<CLIP_NAME>/meta.json
+
+Ejemplo por defecto del programa:
+  videos/1/12Diciembre2025_12Diciembre2025_Cervezas_Cervezas_manana_002920_002950_1/user_136/poses_full.npy
+  videos/1/...002920_002950_1/clip.mp4
+  videos/1/...002920_002950_1/meta.json   (fps ≈ 12.38)
+
+3.2 Formato .npy
+----------------
+Aceptado por el cargador:
+  (T, 8, 2)     frames × joints × (x, y)          ← principal
+  (T, 8, 3)     se ignora z / score en el 3er canal
+  (T, 2, 8, 2)  dos usuarios → se usa usuario 0
+
+Coordenadas: normalizadas típicamente en [0, 1] respecto al frame del vídeo.
+Convención de imagen: y_down = True (y crece hacia abajo, como OpenCV).
+
+poses_full.npy:
+  Puede contener NaN en frames sin detección válida.
+  A menudo acompaña valid_mask.npy (bool, T).
+
+poses.npy:
+  Versión filtrada (solo frames válidos concatenados). El detector trabaja
+  preferentemente con poses_full.npy + timestamps alineados al vídeo.
+
+3.3 meta.json
+-------------
+Debe contener al menos:
+  "fps": <float>
+
+El programa busca meta.json subiendo desde el .npy (hasta 4 niveles).
+Caso típico: .../CLIP/user_XXX/poses.npy → .../CLIP/meta.json
+
+3.4 clip.mp4
+------------
+Usado solo por validate_realtime_full.py.
+Se busca automáticamente en la carpeta del CLIP:
+  clip.mp4, clip.avi, o <CLIP_NAME>.mp4
+
+Si el número de frames del mp4 y del npy no coincide, se usa min(T_npy, T_mp4)
+y se imprime un warning.
+
+
+================================================================================
+4. DEPENDENCIAS
+================================================================================
+
+Obligatorias:
+  - Python 3.10+ recomendado
+  - numpy
+  - scipy          (Savitzky-Golay; si falta, cae a media móvil)
+  - Pillow (PIL)   (UIs Tkinter)
+
+Opcionales / según script:
+  - opencv-python  (validate_realtime_full.py)
+  - matplotlib     (--plot en detect_actions.py; puede fallar según versión numpy)
+  - tkinter        (suele venir con el sistema)
+
+Instalación orientativa:
+  pip install -r requirements.txt
+  pip install opencv-python   # para validate_realtime_full
+
+
+================================================================================
+5. PROGRAMAS CLI E INSTRUCCIONES DE EJECUCIÓN
+================================================================================
+
+Trabajar siempre desde la raíz del proyecto:
+  cd /home/ignacio/Escritorio/Company/Tecnica_Heuristica_HAR
+
+----------------------------------------------------------------------------
+5.1 detect_actions.py — detección batch → .txt
+----------------------------------------------------------------------------
+Sin argumentos (usa el .npy por defecto + FPS de meta.json):
+  python3 detect_actions.py
+
+Otro clip (ruta RELATIVA a videos/):
+  python3 detect_actions.py 1/OTRO_CLIP/user_136/poses_full.npy
+
+También válido:
+  python3 detect_actions.py videos/1/OTRO_CLIP/user_136/poses_full.npy
+  python3 detect_actions.py /ruta/absoluta/.../poses_full.npy
+
+Opciones:
+  --fps FLOAT          fuerza FPS (prioridad sobre meta.json)
+  --output /ruta.txt   ruta exacta del .txt
+  --output-dir DIR     raíz de salida (default: ./output); se anida clase/CLIP
+  --debug              escribe .features.csv, .config.json, .reasons.txt
+  --plot               intenta gráfico matplotlib de features
+  --min-state-s FLOAT  sobrescribe duración mínima de estados
+  --min-action-s FLOAT sobrescribe duración mínima de acciones
+
+Salida por defecto:
+  output/<clase>/<CLIP>/user_XXX_poses_full_actions.txt
+
+----------------------------------------------------------------------------
+5.2 validate_realtime.py — esqueleto + panel de acciones
+----------------------------------------------------------------------------
+  python3 validate_realtime.py
+  python3 validate_realtime.py 1/CLIP/user_136/poses_full.npy
+  python3 validate_realtime.py --save-txt
+  python3 validate_realtime.py --filter WRIST_NEAR
+
+Opciones: mismas ideas (--fps, --filter, --save-txt, --output-dir)
+
+----------------------------------------------------------------------------
+5.3 validate_realtime_full.py — vídeo + esqueleto + panel
+----------------------------------------------------------------------------
+  python3 validate_realtime_full.py
+  python3 validate_realtime_full.py 1/CLIP/user_136/poses_full.npy
+  python3 validate_realtime_full.py --mp4 1/CLIP/clip.mp4
+  python3 validate_realtime_full.py --save-txt --filter WRIST_NEAR
+
+Requiere OpenCV. Localiza clip.mp4 automáticamente junto al CLIP del .npy.
+
+----------------------------------------------------------------------------
+5.4 visualizar_npy.py — solo esqueleto (sin detección)
+----------------------------------------------------------------------------
+  python3 visualizar_npy.py
+  python3 visualizar_npy.py 1/CLIP/user_136/poses_full.npy
+
+
+================================================================================
+6. RESOLUCIÓN AUTOMÁTICA DE RUTAS Y FPS
+================================================================================
+
+6.1 resolve_npy_path
+--------------------
+  - Sin argumento     → videos/<DEFAULT_NPY_RELATIVE>
+  - Ruta absoluta     → tal cual
+  - Empieza por videos/ → PROJECT_ROOT / ruta
+  - Relativa          → VIDEOS_DIR / ruta
+      ej: 1/CLIP/user_136/poses_full.npy
+
+6.2 resolve_fps
+---------------
+Prioridad:
+  1) --fps en CLI
+  2) campo "fps" de meta.json
+
+Si no hay meta.json ni --fps → error claro pidiendo --fps.
+
+6.3 resolve_clip_mp4 (solo full)
+--------------------------------
+  - --mp4 si se indica
+  - si no: <CLIP>/clip.mp4 (u otros candidatos)
+
+
+================================================================================
+7. FORMATO DE SALIDA (.txt)
+================================================================================
+
+Cabecera:
+  # ACTION SEGMENTATION RESULTS
+  # source: <ruta_npy>
+  # fps: <float>
+  # columns: ACTION | START | END | DURATION | CODE
+  # CODE: 0=green  1=yellow  2=red
+  # num_frames=...
+  # duration_s=...
+  # num_segments=...
+  # fps_source=...
+
+Líneas de datos:
+  ACTION | HH:MM:SS.mmm | HH:MM:SS.mmm | DURACION_SEG | CODE
+
+Ejemplo:
+  WRIST_NEAR_WAIST_LEFT | 00:00:02.019 | 00:00:03.312 | 1.293 | 0
+  EXTEND_ARM_RIGHT      | 00:00:05.120 | 00:00:05.680 | 0.560 | 0
+  PERSON_PROFILE_HEURISTIC | 00:00:01.000 | 00:00:08.000 | 7.000 | 1
+
+Final obligatorio:
+  # UNSUPPORTED WITH 2D KEYPOINTS
+  ARM_FORWARD_DEPTH | CODE=2
+  ARM_BACKWARD_DEPTH | CODE=2
+  HAND_FRONT_BACK | CODE=2
+  TORSO_ROTATION_3D_EXACT | CODE=2
+  SHOULDER_ANGLE_3D | CODE=2
+  WRIST_DEPTH | CODE=2
+
+Timestamps:
+  frame i → t = i / fps
+  formato legible: HH:MM:SS.mmm
+
+Solapamiento:
+  Varias etiquetas pueden coexistir en el mismo intervalo (no es clasificación
+  exclusiva por frame).
+
+
+================================================================================
+8. ARQUITECTURA INTERNA
+================================================================================
+
+Pipeline:
+  .npy
+    → PoseSequence (validación shape/FPS/keypoints)
+    → FeatureExtractor (suavizado coords → geometría → derivadas)
+    → StateDetector (histeresis sobre features → segmentos estado)
+    → ActionDetector (FSM de transiciones → segmentos acción)
+    → SegmentProcessor (merge gaps + duración mínima)
+    → write_results_txt / UI
+
+Clases principales:
+  PoseSequence, FeatureExtractor, FeatureSet
+  StateDetector, ActionDetector, ActionAnalysisPipeline
+  SegmentProcessor, Segment, DetectionConfig
+
+
+================================================================================
+9. KEYPOINTS Y CONVENCIONES GEOMÉTRICAS
+================================================================================
+
+Mapping centralizado (har_pose/config.py → KEYPOINTS):
+  0  left_shoulder
+  1  right_shoulder
+  2  left_elbow
+  3  right_elbow
+  4  left_wrist
+  5  right_wrist
+  6  left_hip
+  7  right_hip
+
+Origen: subset COCO upper-body [5,6,7,8,9,10,11,12] del extractor YOLO.
+
+Centros:
+  Sc = (left_shoulder + right_shoulder) / 2     # centro hombros
+  Hc = (left_hip + right_hip) / 2               # centro cintura
+  C  = α·Sc + (1-α)·Hc                          # pecho aproximado
+       α = chest_alpha = 0.65
+
+Escala corporal (normalización de distancias):
+  scale = 0.55 · ancho_hombros + 0.45 · distancia(Sc, Hc)
+  floor: min_body_scale = 1e-3
+
+Ángulo de codo:
+  θ = ángulo en el codo del triángulo hombro–codo–muñeca, grados [0,180]
+  ~180° ≈ brazo extendido/recto
+
+Alturas relativas (y_down=True):
+  height = (ref_y - wrist_y) / scale
+  positivo ⇒ muñeca más arriba que la referencia en la imagen
+
+
+================================================================================
+10. FEATURES CALCULADAS
+================================================================================
+
+Por frame (tras suavizado), entre otras:
+
+Ángulos:
+  elbow_angle_L, elbow_angle_R
+
+Distancias normalizadas:
+  wrist_waist_L/R, wrist_chest_L/R, wrist_shoulder_L/R, wrists_apart
+
+Alturas / lateralidad:
+  wrist_height_sh_L/R, wrist_height_Sc_L/R
+  lateral_L/R, cross_L/R, open_L/R, open_both
+
+Orientación:
+  shoulder_orient, hip_orient, torso_lean, shoulder_hip_twist
+  shoulder_width (norm), torso_height (norm), frontal_ratio
+
+Dinámica (tras suavizado):
+  speed_wrist_L/R, speed_elbow_L/R
+  d_elbow_angle_*, d_wrist_waist_*, d_wrist_chest_*, d_wrists_apart,
+  d_wrist_height_sh_*, d_open_*, d_shoulder_width, ...
+
+Con --debug se exportan varias de estas series a CSV.
+
+
+================================================================================
+11. FILTRADO TEMPORAL
+================================================================================
+
+11.1 Suavizado
+--------------
+  method default: "savgol" (polyorder 2, window 5)
+  alternativas: "mean", "median"
+  Los NaN originales se conservan (no se inventan poses en frames inválidos).
+
+11.2 Histeresis
+---------------
+  mode "above": entra si value > enter; sale si value < exit  (enter ≥ exit)
+  mode "below": entra si value < enter; sale si value > exit  (enter ≤ exit)
+  mode "abs_below": entra si |value| < enter; sale si |value| > exit
+
+Evita flickering alrededor del umbral.
+
+11.3 Duración mínima
+--------------------
+  Estados:  min_state_duration_s  = 0.20 s
+  Acciones: min_action_duration_s = 0.12 s
+  Segmentos más cortos se descartan.
+
+11.4 Unión de gaps
+------------------
+  merge_gap_s = 0.12 s
+  Si la misma etiqueta desaparece y reaparece en ≤ merge_gap_s, se fusionan.
+
+
+================================================================================
+12. ESTADOS VS ACCIONES (FSM)
+================================================================================
+
+ESTADO (persistente):
+  Ej: ARM_EXTENDED_LEFT — el brazo permanece extendido un intervalo.
+  Se detecta con histeresis sobre una feature.
+
+ACCIÓN (transición dinámica):
+  Ej: EXTEND_ARM_LEFT — paso de no-extendido a extendido con incremento
+  significativo del ángulo de codo, derivada positiva y confirmación temporal.
+  NO se etiqueta solo porque el vídeo ya empiece en el estado final.
+
+FSMs conceptuales:
+  FLEXED → EXTENDING → EXTENDED          (EXTEND_ARM_*)
+  EXTENDED → RETRACTING → FLEXED         (RETRACT_ARM_*)
+  FAR → APPROACHING → NEAR               (WRIST_TO_WAIST_*, WRIST_TO_CHEST_*)
+  LOW → RAISING → ELEVATED               (RAISE_ARM_*)
+  HIGH → LOWERING → DOWN                 (LOWER_ARM_*)
+
+Parámetros FSM relevantes:
+  extend_delta_elbow_deg, retract_delta_elbow_deg
+  approach_delta_norm, min_action_speed_norm_s
+  raise_delta_height, hands_sep_delta_norm, open_close_delta
+  action_min_frames = 3
+
+
+================================================================================
+13. CATÁLOGO DE ETIQUETAS DETECTADAS
+================================================================================
+
+13.1 Estados CODE=0 (por lado LEFT/RIGHT salvo indicación)
+----------------------------------------------------------
+  ARM_EXTENDED_*
+  ARM_FLEXED_*
+  ELBOW_ALMOST_STRAIGHT_*
+  ARM_TUCKED_*                 (flexionado + muñeca cerca pecho)
+  WRIST_NEAR_WAIST_*
+  WRIST_NEAR_CHEST_*
+  WRIST_NEAR_TORSO_*           (pecho O cintura)
+  WRIST_NEAR_SHOULDER_*
+  ARM_ELEVATED_*
+  ARM_DOWN_*
+  ARM_HORIZONTAL_*
+
+Agregados bilaterales / globales CODE=0:
+  BOTH_WRISTS_NEAR_CHEST
+  BOTH_WRISTS_NEAR_WAIST
+  ANY_WRIST_NEAR_CHEST
+  ANY_WRIST_NEAR_WAIST
+  WRISTS_TOGETHER
+  WRISTS_APART
+  ARMS_OPEN_LATERAL
+  WRISTS_ABOVE_SHOULDERS
+  BOTH_ARMS_ELEVATED
+  TORSO_LEAN_LEFT
+  TORSO_LEAN_RIGHT
+
+13.2 Acciones dinámicas CODE=0
+------------------------------
+  EXTEND_ARM_* / RETRACT_ARM_*
+  WRIST_TO_WAIST_* / WRIST_TO_CHEST_*
+  RAISE_ARM_* / LOWER_ARM_*
+  JOIN_HANDS / SEPARATE_HANDS
+  OPEN_ARMS_LATERAL / CLOSE_ARMS_LATERAL
+
+13.3 Heurísticas CODE=1 (perspectiva; NO son 3D reales)
+-------------------------------------------------------
+  HAND_CROSS_MIDLINE_LEFT / RIGHT
+  ARMS_CROSSED
+  PERSON_FRONTAL_HEURISTIC
+  PERSON_PROFILE_HEURISTIC
+  SHOULDER_HIP_TWIST_HEURISTIC
+  PARTIAL_TORSO_ROTATION_HEURISTIC
+  BODY_TURN_LEFT_HEURISTIC / BODY_TURN_RIGHT_HEURISTIC
+
+13.4 Unsupported CODE=2 (nunca se detectan; solo se listan al final)
+-------------------------------------------------------------------
+  ARM_FORWARD_DEPTH
+  ARM_BACKWARD_DEPTH
+  HAND_FRONT_BACK
+  TORSO_ROTATION_3D_EXACT
+  SHOULDER_ANGLE_3D
+  WRIST_DEPTH
+
+
+================================================================================
+14. CÓDIGOS DE FIABILIDAD
+================================================================================
+
+  0  VERDE     Condición 2D geométrica razonablemente robusta
+               (ángulos articulares en plano imagen, distancias normalizadas,
+               alturas relativas en imagen).
+
+  1  AMARILLO  Heurística dependiente de perspectiva / foreshortening.
+               Ejemplos: ratio ancho_hombros/altura_torso ≈ frontalidad;
+               cruce de línea media 2D; torsión aparente hombros–cintura.
+               NO interpretar como medición 3D.
+
+  2  ROJO      No observable de forma fiable con pose 2D.
+               El programa NO inventa segmentos para estas clases.
+
+
+================================================================================
+15. THRESHOLDS INICIALES (DetectionConfig) — DETALLE
+================================================================================
+
+IMPORTANTE:
+  Son valores de PARTIDA para poses normalizadas ~[0,1] y 8 keypoints
+  upper-body. NO son universales. Deben calibrarse con un dataset real
+  (anotaciones o validación visual con validate_realtime_full).
+
+Todos editables en: har_pose/config.py → class DetectionConfig
+
+----------------------------------------------------------------------------
+15.1 Geometría corporal
+----------------------------------------------------------------------------
+  chest_alpha               = 0.65
+      Peso de Sc en el centro de pecho C = α·Sc + (1-α)·Hc
+
+  scale_shoulder_weight     = 0.55
+  scale_torso_weight        = 0.45
+      Escala = w_s·ancho_hombros + w_t·||Sc−Hc||
+
+  min_body_scale            = 1e-3
+      Evita división por cero / escala degenerada
+
+----------------------------------------------------------------------------
+15.2 Ángulos de codo (grados). 180° ≈ brazo recto
+----------------------------------------------------------------------------
+  elbow_extended_enter_deg  = 155.0   entrar en ARM_EXTENDED
+  elbow_extended_exit_deg   = 140.0   salir de ARM_EXTENDED
+  elbow_straight_enter_deg  = 165.0   entrar en ELBOW_ALMOST_STRAIGHT
+  elbow_straight_exit_deg   = 155.0
+  elbow_flexed_enter_deg    =  95.0   entrar en ARM_FLEXED (modo below)
+  elbow_flexed_exit_deg     = 110.0   salir de ARM_FLEXED
+  arm_tucked_wrist_chest_norm = 0.55
+      Para ARM_TUCKED: además de flexionado, muñeca cerca pecho
+
+----------------------------------------------------------------------------
+15.3 Distancias normalizadas (× escala corporal)
+----------------------------------------------------------------------------
+  Proximidad muñeca–cintura:
+    wrist_waist_enter_norm  = 0.45
+    wrist_waist_exit_norm   = 0.60
+
+  Proximidad muñeca–pecho:
+    wrist_chest_enter_norm  = 0.40
+    wrist_chest_exit_norm   = 0.55
+
+  Proximidad muñeca–hombro:
+    wrist_shoulder_enter_norm = 0.35
+    wrist_shoulder_exit_norm  = 0.50
+
+  Muñecas juntas / separadas:
+    wrists_together_enter_norm = 0.35
+    wrists_together_exit_norm  = 0.50
+    wrists_apart_enter_norm    = 1.10
+    wrists_apart_exit_norm     = 0.90
+
+----------------------------------------------------------------------------
+15.4 Alturas relativas
+----------------------------------------------------------------------------
+  wrist_above_shoulder_enter = 0.15
+  wrist_above_shoulder_exit  = 0.05
+  arm_elevated_enter         = 0.25
+  arm_elevated_exit          = 0.10
+  arm_down_enter             = -0.35
+  arm_down_exit              = -0.20
+  arm_horizontal_enter_abs   = 0.18
+  arm_horizontal_exit_abs    = 0.28
+
+----------------------------------------------------------------------------
+15.5 Apertura lateral e inclinación torso
+----------------------------------------------------------------------------
+  arms_open_enter            = 0.55
+  arms_open_exit             = 0.35
+  torso_lean_enter_deg       = 12.0
+  torso_lean_exit_deg        =  7.0
+
+----------------------------------------------------------------------------
+15.6 Heurísticas CODE=1
+----------------------------------------------------------------------------
+  cross_midline_enter        = 0.12
+  cross_midline_exit         = 0.05
+  arms_crossed_require_both  = True
+
+  frontal_ratio_enter        = 0.55   (alto ≈ frontal aparente)
+  frontal_ratio_exit         = 0.40
+  profile_ratio_enter        = 0.28   (bajo ≈ perfil aparente)
+  profile_ratio_exit         = 0.38
+
+  shoulder_hip_twist_enter_deg = 18.0
+  shoulder_hip_twist_exit_deg  = 10.0
+  shoulder_width_change_enter  = 0.25
+  body_turn_lean_enter_deg     =  8.0
+
+----------------------------------------------------------------------------
+15.7 Acciones dinámicas (FSM)
+----------------------------------------------------------------------------
+  extend_delta_elbow_deg     = 25.0
+  retract_delta_elbow_deg    = 25.0
+  approach_delta_norm        = 0.25
+  min_action_speed_norm_s    = 0.15
+  hands_sep_delta_norm       = 0.30
+  raise_delta_height         = 0.30
+  open_close_delta           = 0.30
+  action_min_frames          = 3
+
+----------------------------------------------------------------------------
+15.8 Suavizado y temporal
+----------------------------------------------------------------------------
+  smooth_window              = 5
+  smooth_method              = "savgol"
+  savgol_polyorder           = 2
+  velocity_smooth_window     = 5
+  min_state_duration_s       = 0.20
+  min_action_duration_s      = 0.12
+  merge_gap_s                = 0.12
+  y_down                     = True
+
+
+================================================================================
+16. QUÉ CALIBRAR CON DATOS REALES
+================================================================================
+
+Prioridad alta:
+  1. Ángulos de codo (extended / flexed / straight) — varían con oclusión
+     y foreshortening.
+  2. Distancias muñeca–cintura / pecho / hombro (enter/exit).
+  3. Duraciones mínimas y merge_gap_s según FPS real del clip.
+  4. Deltas de acciones (extend_delta, approach_delta, raise_delta).
+
+Prioridad media:
+  5. Umbrales de elevación / brazo abajo / horizontal.
+  6. Ventana de suavizado (smooth_window) según ruido del extractor YOLO.
+  7. min_action_speed_norm_s.
+
+Prioridad baja / solo si se usan etiquetas amarillas:
+  8. Ratios frontal/perfil y twist hombros–cintura.
+  9. cross_midline (cruce 2D).
+
+Método recomendado de calibración:
+  - Revisar clips con validate_realtime_full.py
+  - Ajustar DetectionConfig
+  - Regenerar .txt con detect_actions.py --debug
+  - Comparar reasons / features CSV con lo observado
+
+
+================================================================================
+17. LIMITACIONES (DETALLE)
+================================================================================
+
+17.1 Limitación fundamental: NO HAY PROFUNDIDAD
+-----------------------------------------------
+Un esqueleto 2D es la proyección de un cuerpo 3D en el plano de la cámara.
+Por tanto:
+
+  - No se puede saber con fiabilidad si un brazo va HACIA DELANTE o HACIA ATRÁS.
+  - No se puede medir el ángulo 3D real del hombro.
+  - No se puede medir la profundidad real de una muñeca respecto al torso.
+  - La rotación 3D exacta del torso no es observable.
+
+Estas capacidades están explícitamente marcadas CODE=2 y NO se estiman
+como si fueran fiables.
+
+17.2 Perspectiva y foreshortening
+---------------------------------
+  - En vista de perfil, el ancho aparente de hombros cae → PERSON_PROFILE_HEURISTIC
+    puede activarse aunque la persona no esté de perfil “perfecto”.
+  - Un brazo extendido hacia la cámara parece “recogido” en 2D (ángulo de codo
+    proyectado engañoso).
+  - Distancias 2D normalizadas cambian con el zoom / distancia a cámara aunque
+    la escala corporal mitiga parte del efecto.
+
+17.3 Cruce de brazos / línea media (CODE=1)
+-------------------------------------------
+  - Que una muñeca cruce la línea media en la imagen NO implica cruce anatómico 3D.
+  - En oclusiones o perfiles puede haber falsos positivos de ARMS_CROSSED.
+
+17.4 Calidad del .npy de entrada
+--------------------------------
+  - NaNs, oclusiones, track switches (user_id), keypoints degenerados (puntos
+    coincidentes → ángulo NaN).
+  - poses_full puede tener muchos frames inválidos; valid_mask ayuda a interpretar.
+  - Si el extractor YOLO falla, el detector heredará el error.
+
+17.5 Alineación vídeo ↔ pose
+----------------------------
+  - Si clip.mp4 y poses_full.npy no tienen el mismo número de frames, la
+    superposición en validate_realtime_full puede desfasarse en el tramo final.
+  - El FPS incorrecto desplaza todos los timestamps del .txt.
+
+17.6 Sobredetección / ruido de etiquetas
+----------------------------------------
+  - Muchos estados pueden estar activos a la vez (diseño intencional).
+  - Heurísticas CODE=1 pueden parpadear o activarse en tramos largos.
+  - Acciones dinámicas pueden fallar si el movimiento es muy lento o muy rápido
+    respecto a los deltas configurados.
+  - Usar --filter en las UIs para centrarse en familias de interés
+    (ej: WRIST_NEAR, EXTEND_ARM).
+
+17.7 No es un sistema de seguridad / producción sin calibrar
+------------------------------------------------------------
+  - Los thresholds son iniciales.
+  - No hay garantías de recall/precision hasta validación con dataset anotado.
+  - No sustituye supervisión humana en aplicaciones críticas.
+
+17.8 Dependencias de entorno
+----------------------------
+  - Tkinter requiere display gráfico.
+  - matplotlib puede ser incompatible con ciertas versiones de NumPy.
+  - OpenCV necesario solo para validate_realtime_full.
+
+
+================================================================================
+18. CONTROLES DE LAS UIs DE VALIDACIÓN
+================================================================================
+
+Comunes a validate_realtime y validate_realtime_full:
+  Espacio     pausa / reanuda
+  ← / →       frame −1 / +1 (entra en pausa)
+  ↑ / ↓       ±10 frames
+  Home / End  inicio / fin
+  [ / ]       velocidad ×0.8 / ×1.25 (aprox.)
+  F           alterna “solo CODE=0” / todos
+  Q / Esc     salir
+
+Panel derecho:
+  Lista de acciones/estados activos en el frame actual,
+  color según CODE (verde/amarillo), con tiempo restante estimado.
+
+
+================================================================================
+19. TESTS
+================================================================================
+
+  python3 -m unittest tests.test_har_pose -v
+
+Cubren (entre otros):
+  - geometría (ángulo recto / degenerado)
+  - timestamps HH:MM:SS.mmm
+  - histeresis sin flickering
+  - merge de gaps cortos
+  - descarte por duración mínima
+  - brazo que permanece extendido (sin falsa acción EXTEND)
+  - transición flexed→extended → EXTEND_ARM
+  - acercamiento muñeca–cintura
+  - clases CODE=2 nunca aparecen como detección
+  - escritura del bloque UNSUPPORTED en el .txt
+
+
+================================================================================
+20. NOTAS DE MANTENIMIENTO
+================================================================================
+
+- Cambiar thresholds: editar DetectionConfig en har_pose/config.py
+- Cambiar orden de keypoints: editar KEYPOINTS (único sitio canónico)
+- Añadir un estado nuevo: StateDetector.detect_all + (opcional) documentación aquí
+- Añadir una acción nueva: ActionDetector con FSM explícita (no solo umbral estático)
+- El .npy por defecto se cambia en DEFAULT_NPY_RELATIVE (config.py)
+- La raíz de datos es VIDEOS_DIR = <proyecto>/videos
+- La raíz de resultados es DEFAULT_OUTPUT_DIR = <proyecto>/output
+
+
+================================================================================
+EJEMPLOS RÁPIDOS DE USO
+================================================================================
+
+cd /home/ignacio/Escritorio/Company/Tecnica_Heuristica_HAR
+
+# 1) Detectar el clip por defecto
+python3 detect_actions.py
+
+# 2) Detectar otro clip
+python3 detect_actions.py 1/12Diciembre2025_12Diciembre2025_Cervezas_Cervezas_manana_004048_004128_1/user_136/poses_full.npy
+
+# 3) Validar solo esqueleto + acciones
+python3 validate_realtime.py
+
+# 4) Validar vídeo + esqueleto + acciones
+python3 validate_realtime_full.py
+
+# 5) Validar filtrando proximidad a pecho/cintura
+python3 validate_realtime_full.py --filter WRIST_NEAR
+
+
+================================================================================
+ADVERTENCIA FINAL
+================================================================================
+
+Este sistema analiza PROYECCIONES 2D. Las etiquetas verdes son las más
+defendibles geométricamente; las amarillas son heurísticas de perspectiva;
+las rojas no se detectan porque requerirían información 3D que el .npy no
+contiene. No presentar nunca una heurística CODE=1 como medición 3D real.
+
+
+================================================================================
+Fin del documento
+================================================================================

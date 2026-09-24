@@ -1,0 +1,145 @@
+==========================================================================================
+COMPARATIVA BASE vs MOD — 10 clips de videos/2/
+detect_action_json.py  vs  detect_action_json_mod.py
+==========================================================================================
+
+Clips seleccionados (muestreados de forma uniforme entre los 40 disponibles):
+   1. 12Diciembre2025_12Diciembre2025_Cervezas_Cervezas_manana_003702_003747_2 / user_183  (534 frames, 43.1s @ 12.380fps)
+   2. 12Diciembre2025_12Diciembre2025_Cervezas_Cervezas_tarde_004050_004135_2 / user_542  (555 frames, 45.0s @ 12.333fps)
+   3. 12Diciembre2025_12Diciembre2025_Pasillo_Conservas_Conservas_manana_1_005541_005559_2 / user_1853  (220 frames, 18.0s @ 12.250fps)
+   4. 12Diciembre2025_12Diciembre2025_Pasillo_Conservas_Conservas_tarde_011454_011524_2 / user_2121  (367 frames, 30.0s @ 12.250fps)
+   5. 12Diciembre2025_12Diciembre2025_Pasillo_Legumbres_Legumbres_tarde_010009_010104_2 / user_2610  (670 frames, 55.1s @ 12.167fps)
+   6. 13Diciembre2025_13Diciembre2025_Mañana_cerveza_manana_003730_003807_2 / user_2759  (457 frames, 36.9s @ 12.390fps)
+   7. 13Diciembre2025_13Diciembre2025_Mañana_cerveza_manana_010450_010522_2 / user_2837  (270 frames, 21.8s @ 12.385fps)
+   8. 15Diciembre2025_15Diciembre2025_cam1_17_00___21_00_002525_002550_2 / user_3076  (304 frames, 25.0s @ 12.167fps)
+   9. 15Diciembre2025_15Diciembre2025_cam2_17_00_00____21_00_00_003104_003121_2 / user_3908  (207 frames, 17.0s @ 12.167fps)
+  10. 15Diciembre2025_15Diciembre2025_cam3_9_00_00____14_15_00_1_000616_000622_2 / user_4444  (49 frames, 4.1s @ 11.880fps)
+
+------------------------------------------------------------------------------------------
+RESUMEN GLOBAL (suma de los 10 clips)
+------------------------------------------------------------------------------------------
+Métrica                                    BASE          MOD            Δ
+---------------------------------- ------------ ------------ ------------
+num_segments (total)                       1091          570         -521
+duración media segmento (s)               3.074        6.077       +3.003
+duración mediana (s)                      1.061        3.312       +2.251
+duración mín (s)                          0.162        0.486       +0.325
+duración máx (s)                         54.411       50.548       -3.863
+segmentos < 0.5s                            318            4         -314
+segmentos < 1.0s                            528           56         -472
+segmentos ≥ 5.0s                            173          199          +26
+
+Reducción de segmentos: 47.8%
+
+------------------------------------------------------------------------------------------
+POR CLIP
+------------------------------------------------------------------------------------------
+#   user            nB    nM    Δn   meanB   meanM  lt1B  lt1M  clip
+--- ------------ ----- ----- ----- ------- ------- ----- -----  ----------------------------------------
+1   user_183       248   136  -112    2.17    4.13   119    13  12Diciembre2025_12Diciembre2025_Cerve...
+2   user_542       136    65   -71    3.56    7.89    61     8  12Diciembre2025_12Diciembre2025_Cerve...
+3   user_1853       81    47   -34    2.57    4.79    41     6  12Diciembre2025_12Diciembre2025_Pasil...
+4   user_2121       63    41   -22    6.99   10.97    22     1  12Diciembre2025_12Diciembre2025_Pasil...
+5   user_2610       81    44   -37    6.73   12.47    32     1  12Diciembre2025_12Diciembre2025_Pasil...
+6   user_2759      110    52   -58    3.41    7.20    54     1  13Diciembre2025_13Diciembre2025_Mañan...
+7   user_2837       82    47   -35    3.01    5.08    35     7  13Diciembre2025_13Diciembre2025_Mañan...
+8   user_3076      146    73   -73    1.84    3.87    77    10  15Diciembre2025_15Diciembre2025_cam1_...
+9   user_3908      105    45   -60    2.00    5.02    61     5  15Diciembre2025_15Diciembre2025_cam2_...
+10  user_4444       39    20   -19    1.00    2.19    26     4  15Diciembre2025_15Diciembre2025_cam3_...
+
+------------------------------------------------------------------------------------------
+POR ACCIÓN (agregado 10 clips)  count BASE→MOD | mean_s BASE→MOD
+------------------------------------------------------------------------------------------
+ACTION                                        nB    nM    Δn   meanB   meanM
+------------------------------------------ ----- ----- ----- ------- -------
+PARTIAL_TORSO_ROTATION_HEURISTIC              92    30   +62    0.84    2.43
+SEPARATE_HANDS                                46    32   +14    4.37    6.23
+JOIN_HANDS                                    36    28    +8    6.52    7.41
+ARM_FLEXED_LEFT                               44    16   +28    2.04    5.21
+WRIST_NEAR_TORSO_RIGHT                        39    21   +18    2.61    5.69
+ANY_WRIST_NEAR_CHEST                          40    19   +21    2.89    7.22
+HAND_CROSS_MIDLINE_LEFT                       34    22   +12    4.88    7.81
+WRISTS_APART                                  36    19   +17    1.83    3.29
+WRIST_NEAR_TORSO_LEFT                         37    17   +20    4.88   12.19
+ARM_TUCKED_LEFT                               36    14   +22    1.69    4.21
+WRISTS_TOGETHER                               31    18   +13    1.16    2.37
+ARM_DOWN_RIGHT                                27    19    +8    9.20   13.20
+ARM_FLEXED_RIGHT                              33    13   +20    2.80    6.92
+ELBOW_ALMOST_STRAIGHT_RIGHT                   30    16   +14    3.12    6.49
+ARM_EXTENDED_RIGHT                            27    18    +9    5.07    7.29
+ANY_WRIST_NEAR_WAIST                          27    16   +11    4.26    7.61
+ARMS_CROSSED                                  26    17    +9    3.25    5.08
+HAND_CROSS_MIDLINE_RIGHT                      25    17    +8    5.56    8.19
+WRIST_NEAR_WAIST_LEFT                         28    14   +14    3.12    7.15
+ELBOW_ALMOST_STRAIGHT_LEFT                    24    12   +12    2.57    5.46
+WRIST_NEAR_CHEST_RIGHT                        25    11   +14    1.00    3.04
+ARM_DOWN_LEFT                                 21    14    +7   11.99   18.38
+WRIST_NEAR_WAIST_RIGHT                        21    14    +7    3.64    6.03
+ARM_EXTENDED_LEFT                             24    10   +14    3.98    9.41
+PERSON_PROFILE_HEURISTIC                      17    15    +2    5.94    6.87
+BODY_TURN_RIGHT_HEURISTIC                     23     8   +15    0.78    1.92
+WRIST_NEAR_CHEST_LEFT                         19    12    +7    4.95    9.09
+ARM_TUCKED_RIGHT                              21     9   +12    0.93    3.17
+BOTH_WRISTS_NEAR_WAIST                        18    12    +6    2.70    5.23
+LOWER_ARM_RIGHT                               17    10    +7    0.60    1.24
+ARM_HORIZONTAL_RIGHT                          16     8    +8    1.62    2.96
+SHOULDER_HIP_TWIST_HEURISTIC                  12     8    +4    2.32    3.30
+ARM_HORIZONTAL_LEFT                           14     5    +9    1.22    2.98
+TORSO_LEAN_RIGHT                              10     7    +3    2.87    4.07
+LOWER_ARM_LEFT                                10     6    +4    0.41    1.19
+PERSON_FRONTAL_HEURISTIC                       8     7    +1    3.86    4.17
+WRIST_NEAR_SHOULDER_RIGHT                     10     4    +6    1.43    3.89
+RETRACT_ARM_LEFT                              10     3    +7    0.34    0.87
+RETRACT_ARM_RIGHT                             12     0   +12    0.25    0.00
+RAISE_ARM_RIGHT                                6     3    +3    0.97    1.35
+ARM_ELEVATED_RIGHT                             6     2    +4    1.47    3.27
+EXTEND_ARM_RIGHT                               6     2    +4    0.96    1.96
+TORSO_LEAN_LEFT                                4     4    +0    1.82    1.82
+WRIST_TO_WAIST_RIGHT                           6     2    +4    0.64    1.35
+BODY_TURN_LEFT_HEURISTIC                       6     1    +5    0.61    0.98
+BOTH_WRISTS_NEAR_CHEST                         4     3    +1    0.93    1.87
+WRIST_TO_CHEST_RIGHT                           4     3    +1    0.41    1.59
+WRIST_TO_WAIST_LEFT                            5     1    +4    0.95    0.57
+WRIST_NEAR_SHOULDER_LEFT                       3     2    +1    2.05    4.92
+WRIST_TO_CHEST_LEFT                            4     1    +3    0.39    1.05
+RAISE_ARM_LEFT                                 2     2    +0    0.69    0.81
+ARM_ELEVATED_LEFT                              2     1    +1    6.17   11.84
+EXTEND_ARM_LEFT                                1     2    -1    0.41    1.30
+OPEN_ARMS_LATERAL                              2     0    +2    0.29    0.00
+WRISTS_ABOVE_SHOULDERS                         2     0    +2    0.41    0.00
+ARMS_OPEN_LATERAL                              1     0    +1    0.42    0.00
+BOTH_ARMS_ELEVATED                             1     0    +1    0.49    0.00
+
+------------------------------------------------------------------------------------------
+TOP 15 reducciones de segmentos (BASE−MOD)
+------------------------------------------------------------------------------------------
+  PARTIAL_TORSO_ROTATION_HEURISTIC: 92 → 30 (Δ -62)  mean 0.84s → 2.43s
+  ARM_FLEXED_LEFT: 44 → 16 (Δ -28)  mean 2.04s → 5.21s
+  ARM_TUCKED_LEFT: 36 → 14 (Δ -22)  mean 1.69s → 4.21s
+  ANY_WRIST_NEAR_CHEST: 40 → 19 (Δ -21)  mean 2.89s → 7.22s
+  WRIST_NEAR_TORSO_LEFT: 37 → 17 (Δ -20)  mean 4.88s → 12.19s
+  ARM_FLEXED_RIGHT: 33 → 13 (Δ -20)  mean 2.80s → 6.92s
+  WRIST_NEAR_TORSO_RIGHT: 39 → 21 (Δ -18)  mean 2.61s → 5.69s
+  WRISTS_APART: 36 → 19 (Δ -17)  mean 1.83s → 3.29s
+  BODY_TURN_RIGHT_HEURISTIC: 23 → 8 (Δ -15)  mean 0.78s → 1.92s
+  SEPARATE_HANDS: 46 → 32 (Δ -14)  mean 4.37s → 6.23s
+  ELBOW_ALMOST_STRAIGHT_RIGHT: 30 → 16 (Δ -14)  mean 3.12s → 6.49s
+  WRIST_NEAR_WAIST_LEFT: 28 → 14 (Δ -14)  mean 3.12s → 7.15s
+  WRIST_NEAR_CHEST_RIGHT: 25 → 11 (Δ -14)  mean 1.00s → 3.04s
+  ARM_EXTENDED_LEFT: 24 → 10 (Δ -14)  mean 3.98s → 9.41s
+  WRISTS_TOGETHER: 31 → 18 (Δ -13)  mean 1.16s → 2.37s
+
+------------------------------------------------------------------------------------------
+INTERPRETACIÓN
+------------------------------------------------------------------------------------------
+- En 10 clips de clase 2, MOD reduce segmentos de 1091 a 570 (~47.8%).
+- Duración media: 3.07s → 6.08s.
+- Segmentos cortos (<1s): 528 → 56.
+- Misma taxonomía de acciones; cambia filtrado temporal (merge_gap, min duration, suavizado).
+
+Parámetros MOD (har_pose/config_mod.py):
+  min_state_duration_s=0.80  min_action_duration_s=0.45  merge_gap_s=0.70
+  smooth_window=11  action_min_frames=5
+
+JSONs por clip en: output/2/_comparativa_10_clips_base_vs_mod/
+==========================================================================================

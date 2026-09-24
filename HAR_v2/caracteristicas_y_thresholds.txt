@@ -1,0 +1,238 @@
+================================================================================
+HAR POSE — Características del programa y thresholds iniciales
+Proyecto: Tecnica_Heuristica_HAR
+Archivo:  caracteristicas_y_thresholds.txt
+================================================================================
+
+1. DESCRIPCIÓN
+--------------
+Programa de detección heurística (sin machine learning) de estados y acciones
+corporales a partir de secuencias de pose 2D almacenadas en archivos .npy.
+
+Entrada:  .npy con shape (T, 8, 2) — frames × joints × (x, y)
+Salida:   .txt con segmentos ACTION | START | END | DURATION | CODE
+Directorio de datos (poses .npy):
+  /home/ignacio/Escritorio/Company/Tecnica_Heuristica_HAR/videos/
+  Estructura: videos/<clase 0-7>/<CLIP>/user_XXX/poses_full.npy
+
+Directorio de salida por defecto:
+  /home/ignacio/Escritorio/Company/Tecnica_Heuristica_HAR/output/<clase>/<CLIP>/
+
+  Ejemplo de origen:
+    videos/1/12Diciembre2025_..._002950_1/user_136/poses_full.npy
+  Ejemplo de salida:
+    output/1/12Diciembre2025_..._002950_1/user_136_poses_full_actions.txt
+
+Validación in-situ (esqueleto + acciones en vivo):
+  python3 validate_realtime.py
+  python3 validate_realtime.py 1/CLIP/user_136/poses_full.npy --save-txt
+  python3 validate_realtime.py --filter WRIST_NEAR
+
+
+
+2. ARQUITECTURA
+---------------
+detect_actions.py          CLI de ejecución
+har_pose/
+  config.py                KEYPOINTS, DetectionConfig, clases CODE=2
+  geometry.py              ángulos, distancias, inclinación (NaN-safe)
+  filters.py               suavizado (savgol/media/mediana) + derivadas
+  features.py              PoseSequence + FeatureExtractor
+  temporal.py              histeresis, merge de gaps, duración mínima
+  detectors.py             StateDetector + ActionDetector (FSM)
+  io_utils.py              carga .npy, timestamps HH:MM:SS.mmm, escritura
+
+
+3. KEYPOINTS (orden centralizado en config.KEYPOINTS)
+-----------------------------------------------------
+  0  left_shoulder
+  1  right_shoulder
+  2  left_elbow
+  3  right_elbow
+  4  left_wrist
+  5  right_wrist
+  6  left_hip
+  7  right_hip
+
+
+4. CÓDIGOS DE FIABILIDAD
+------------------------
+  0  VERDE    Observable de forma razonablemente fiable en 2D
+  1  AMARILLO Heurística dependiente de perspectiva (NO es 3D real)
+  2  ROJO     No observable de forma fiable en 2D (unsupported_2d)
+
+Clases CODE=2 (nunca se detectan; solo se listan al final del .txt):
+  ARM_FORWARD_DEPTH
+  ARM_BACKWARD_DEPTH
+  HAND_FRONT_BACK
+  TORSO_ROTATION_3D_EXACT
+  SHOULDER_ANGLE_3D
+  WRIST_DEPTH
+
+
+5. FEATURES PRINCIPALES
+-----------------------
+  - Ángulos de codo (hombro-codo-muñeca), grados [0, 180]
+  - Centros: hombros Sc, cintura Hc, pecho C = 0.65·Sc + 0.35·Hc
+  - Escala corporal = 0.55·ancho_hombros + 0.45·altura_torso
+  - Distancias normalizadas: muñeca→cintura/pecho/hombro, muñecas entre sí
+  - Alturas relativas de muñecas (y_down = True, típico vídeo/OpenCV)
+  - Orientación hombros/cintura, inclinación de torso, twist aparente
+  - Dinámica: velocidades y derivadas temporales (tras suavizado)
+
+5.1 PROXIMIDAD MUÑECAS → PECHO / CINTURA (CODE=0)
+------------------------------------------------
+Estados por lado:
+  WRIST_NEAR_CHEST_LEFT / WRIST_NEAR_CHEST_RIGHT
+      distancia(muñeca, centro_pecho) / escala  <  enter 0.40 (sale > 0.55)
+  WRIST_NEAR_WAIST_LEFT / WRIST_NEAR_WAIST_RIGHT
+      distancia(muñeca, centro_cintura) / escala <  enter 0.45 (sale > 0.60)
+  WRIST_NEAR_TORSO_LEFT / WRIST_NEAR_TORSO_RIGHT
+      cerca del pecho O de la cintura
+
+Estados agregados:
+  BOTH_WRISTS_NEAR_CHEST   ambas muñecas cerca del pecho
+  BOTH_WRISTS_NEAR_WAIST   ambas muñecas cerca de la cintura
+  ANY_WRIST_NEAR_CHEST     al menos una cerca del pecho
+  ANY_WRIST_NEAR_WAIST     al menos una cerca de la cintura
+
+Acciones dinámicas asociadas:
+  WRIST_TO_CHEST_LEFT / RIGHT   acercamiento a pecho (FSM)
+  WRIST_TO_WAIST_LEFT / RIGHT   acercamiento a cintura (FSM)
+
+
+6. FILTRADO TEMPORAL
+--------------------
+  - Suavizado de coordenadas/features (Savitzky-Golay por defecto)
+  - Histeresis (umbral de entrada ≠ umbral de salida)
+  - Duración mínima de estado/acción
+  - Fusión de gaps cortos de la misma etiqueta
+  - Acciones dinámicas vía máquinas de estados (no solo frame final)
+
+
+7. EJEMPLO DE EJECUCIÓN
+-----------------------
+cd /home/ignacio/Escritorio/Company/Tecnica_Heuristica_HAR
+
+python3 detect_actions.py
+# equivale a:
+# python3 detect_actions.py 1/12Diciembre2025_..._002950_1/user_136/poses_full.npy
+
+Notas:
+  - Los .npy se resuelven respecto a ./videos/
+  - Si no pasas --fps, se lee de meta.json (campo "fps")
+  - --fps en CLI tiene prioridad sobre meta.json.
+  - Salida: output/<clase>/<CLIP>/user_XXX_poses_full_actions.txt
+  - Validación visual: python3 validate_realtime.py
+  - Opcional: --debug  (CSV de features + reasons)
+  - Opcional: --output /ruta/custom.txt
+  - Opcional: --plot   (si matplotlib está disponible)
+
+
+8. THRESHOLDS INICIALES (DetectionConfig)
+-----------------------------------------
+IMPORTANTE: valores de partida razonables para poses normalizadas ~[0,1].
+NO son universales. Deben calibrarse con un dataset real.
+
+8.1 Geometría corporal
+  chest_alpha                 = 0.65
+  scale_shoulder_weight       = 0.55
+  scale_torso_weight          = 0.45
+  min_body_scale              = 1e-3
+
+8.2 Ángulos de codo (grados). 180° ≈ brazo recto
+  elbow_extended_enter_deg    = 155.0   (entrar en "extendido")
+  elbow_extended_exit_deg     = 140.0   (salir de "extendido")
+  elbow_straight_enter_deg    = 165.0   (casi recto)
+  elbow_straight_exit_deg     = 155.0
+  elbow_flexed_enter_deg      =  95.0   (entrar en "flexionado")
+  elbow_flexed_exit_deg       = 110.0
+  arm_tucked_wrist_chest_norm = 0.55    (recogido: flexionado + cerca pecho)
+
+8.3 Distancias normalizadas (× escala corporal)
+  wrist_waist_enter_norm      = 0.45
+  wrist_waist_exit_norm       = 0.60
+  wrist_chest_enter_norm      = 0.40
+  wrist_chest_exit_norm       = 0.55
+  wrist_shoulder_enter_norm   = 0.35
+  wrist_shoulder_exit_norm    = 0.50
+  wrists_together_enter_norm  = 0.35
+  wrists_together_exit_norm   = 0.50
+  wrists_apart_enter_norm     = 1.10
+  wrists_apart_exit_norm      = 0.90
+
+8.4 Alturas relativas (positivo = muñeca por encima del hombro si y_down)
+  wrist_above_shoulder_enter  = 0.15
+  wrist_above_shoulder_exit   = 0.05
+  arm_elevated_enter          = 0.25
+  arm_elevated_exit           = 0.10
+  arm_down_enter              = -0.35
+  arm_down_exit               = -0.20
+  arm_horizontal_enter_abs    = 0.18
+  arm_horizontal_exit_abs     = 0.28
+
+8.5 Apertura lateral / torso
+  arms_open_enter             = 0.55
+  arms_open_exit              = 0.35
+  torso_lean_enter_deg        = 12.0
+  torso_lean_exit_deg         =  7.0
+
+8.6 Heurísticas perspectiva (CODE=1)
+  cross_midline_enter         = 0.12
+  cross_midline_exit          = 0.05
+  arms_crossed_require_both   = True
+  frontal_ratio_enter         = 0.55
+  frontal_ratio_exit          = 0.40
+  profile_ratio_enter         = 0.28
+  profile_ratio_exit          = 0.38
+  shoulder_hip_twist_enter_deg= 18.0
+  shoulder_hip_twist_exit_deg = 10.0
+  shoulder_width_change_enter = 0.25
+  body_turn_lean_enter_deg    =  8.0
+
+8.7 Acciones dinámicas (FSM)
+  extend_delta_elbow_deg      = 25.0
+  retract_delta_elbow_deg     = 25.0
+  approach_delta_norm         = 0.25
+  min_action_speed_norm_s     = 0.15
+  hands_sep_delta_norm        = 0.30
+  raise_delta_height          = 0.30
+  open_close_delta            = 0.30
+  action_min_frames           = 3
+
+8.8 Suavizado y temporal
+  smooth_window               = 5
+  smooth_method               = "savgol"
+  savgol_polyorder            = 2
+  velocity_smooth_window      = 5
+  min_state_duration_s        = 0.20
+  min_action_duration_s       = 0.12
+  merge_gap_s                 = 0.12
+  y_down                      = True
+
+
+9. QUÉ CALIBRAR CON DATOS REALES
+--------------------------------
+  1. Ángulos de codo (extended / flexed / straight)
+  2. Distancias muñeca–cintura / pecho / hombro
+  3. Duraciones mínimas y merge_gap_s (según FPS del clip)
+  4. Deltas de acciones (extend_delta, approach_delta, raise_delta)
+  5. Ratios frontal/perfil (etiquetas CODE=1)
+  6. Ventana de suavizado (smooth_window) según ruido del extractor
+
+
+10. LIMITACIÓN FUNDAMENTAL 2D
+-----------------------------
+Un esqueleto 2D no tiene profundidad. No se puede afirmar con fiabilidad
+si un brazo va hacia delante/atrás, ni medir rotación 3D real del torso.
+Las etiquetas CODE=1 son heurísticas de perspectiva, no mediciones 3D.
+Las CODE=2 no se inventan ni se estiman como fiables.
+
+
+11. TESTS
+---------
+python3 -m unittest tests.test_har_pose -v
+
+================================================================================
+Fin del documento
+================================================================================

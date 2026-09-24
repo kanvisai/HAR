@@ -1,0 +1,203 @@
+{
+  "source": "/home/ignacio/Escritorio/Company/Tecnica_Heuristica_HAR/videos/2/15Diciembre2025_15Diciembre2025_cam2_17_00_00____21_00_00_002157_002209_2/user_3848/poses_full.npy",
+  "fps": 12.166666666666666,
+  "fps_source": "/home/ignacio/Escritorio/Company/Tecnica_Heuristica_HAR/videos/2/15Diciembre2025_15Diciembre2025_cam2_17_00_00____21_00_00_002157_002209_2/meta.json",
+  "num_frames": 66,
+  "duration_s": 5.424658,
+  "filter": null,
+  "config_variant": "mod",
+  "num_segments": 11,
+  "segments": [
+    {
+      "action": "ARM_DOWN_LEFT",
+      "start_frame": 0,
+      "end_frame": 65,
+      "start": "00:00:00.000",
+      "end": "00:00:05.425",
+      "start_s": 0.0,
+      "end_s": 5.424658,
+      "duration_s": 5.424658,
+      "code": 0,
+      "feature": "wrist_height_sh_L",
+      "reason": "wrist below shoulder (image y)",
+      "enter_threshold": -0.38,
+      "exit_threshold": -0.15
+    },
+    {
+      "action": "ARM_DOWN_RIGHT",
+      "start_frame": 0,
+      "end_frame": 65,
+      "start": "00:00:00.000",
+      "end": "00:00:05.425",
+      "start_s": 0.0,
+      "end_s": 5.424658,
+      "duration_s": 5.424658,
+      "code": 0,
+      "feature": "wrist_height_sh_R",
+      "reason": "wrist below shoulder (image y)",
+      "enter_threshold": -0.38,
+      "exit_threshold": -0.15
+    },
+    {
+      "action": "PARTIAL_TORSO_ROTATION_HEURISTIC",
+      "start_frame": 0,
+      "end_frame": 11,
+      "start": "00:00:00.000",
+      "end": "00:00:00.986",
+      "start_s": 0.0,
+      "end_s": 0.986301,
+      "duration_s": 0.986301,
+      "code": 1,
+      "feature": "d_shoulder_width",
+      "reason": "HEURISTIC: apparent shoulder-width change over time",
+      "enter_threshold": 0.125,
+      "exit_threshold": 0.0625
+    },
+    {
+      "action": "HAND_CROSS_MIDLINE_RIGHT",
+      "start_frame": 1,
+      "end_frame": 65,
+      "start": "00:00:00.082",
+      "end": "00:00:05.425",
+      "start_s": 0.082192,
+      "end_s": 5.424658,
+      "duration_s": 5.342466,
+      "code": 1,
+      "feature": "cross_R",
+      "reason": "HEURISTIC: 2D midline crossing depends on camera view",
+      "enter_threshold": 0.12,
+      "exit_threshold": 0.05
+    },
+    {
+      "action": "SEPARATE_HANDS",
+      "start_frame": 2,
+      "end_frame": 8,
+      "start": "00:00:00.164",
+      "end": "00:00:00.740",
+      "start_s": 0.164384,
+      "end_s": 0.739726,
+      "duration_s": 0.575342,
+      "code": 0,
+      "feature": "wrists_apart",
+      "reason": "wrists distance transition",
+      "enter_threshold": null,
+      "exit_threshold": null
+    },
+    {
+      "action": "PERSON_PROFILE_HEURISTIC",
+      "start_frame": 3,
+      "end_frame": 65,
+      "start": "00:00:00.247",
+      "end": "00:00:05.425",
+      "start_s": 0.246575,
+      "end_s": 5.424658,
+      "duration_s": 5.178082,
+      "code": 1,
+      "feature": "frontal_ratio",
+      "reason": "HEURISTIC: low shoulder-width/torso-height ratio ≈ profile view",
+      "enter_threshold": 0.28,
+      "exit_threshold": 0.38
+    },
+    {
+      "action": "ARM_EXTENDED_LEFT",
+      "start_frame": 4,
+      "end_frame": 65,
+      "start": "00:00:00.329",
+      "end": "00:00:05.425",
+      "start_s": 0.328767,
+      "end_s": 5.424658,
+      "duration_s": 5.09589,
+      "code": 0,
+      "feature": "elbow_angle_L",
+      "reason": "elbow angle above extended threshold (2D)",
+      "enter_threshold": 158.0,
+      "exit_threshold": 135.0
+    },
+    {
+      "action": "ARMS_CROSSED",
+      "start_frame": 5,
+      "end_frame": 65,
+      "start": "00:00:00.411",
+      "end": "00:00:05.425",
+      "start_s": 0.410959,
+      "end_s": 5.424658,
+      "duration_s": 5.013699,
+      "code": 1,
+      "feature": "cross_L&cross_R",
+      "reason": "HEURISTIC: both wrists past midline in 2D",
+      "enter_threshold": null,
+      "exit_threshold": null
+    },
+    {
+      "action": "HAND_CROSS_MIDLINE_LEFT",
+      "start_frame": 5,
+      "end_frame": 65,
+      "start": "00:00:00.411",
+      "end": "00:00:05.425",
+      "start_s": 0.410959,
+      "end_s": 5.424658,
+      "duration_s": 5.013699,
+      "code": 1,
+      "feature": "cross_L",
+      "reason": "HEURISTIC: 2D midline crossing depends on camera view",
+      "enter_threshold": 0.12,
+      "exit_threshold": 0.05
+    },
+    {
+      "action": "WRISTS_APART",
+      "start_frame": 8,
+      "end_frame": 65,
+      "start": "00:00:00.658",
+      "end": "00:00:05.425",
+      "start_s": 0.657534,
+      "end_s": 5.424658,
+      "duration_s": 4.767123,
+      "code": 0,
+      "feature": "wrists_apart",
+      "reason": "both wrists far in 2D",
+      "enter_threshold": 1.15,
+      "exit_threshold": 0.85
+    },
+    {
+      "action": "JOIN_HANDS",
+      "start_frame": 22,
+      "end_frame": 65,
+      "start": "00:00:01.808",
+      "end": "00:00:05.425",
+      "start_s": 1.808219,
+      "end_s": 5.424658,
+      "duration_s": 3.616438,
+      "code": 0,
+      "feature": "wrists_apart",
+      "reason": "wrists distance transition",
+      "enter_threshold": null,
+      "exit_threshold": null
+    }
+  ],
+  "unsupported_2d": [
+    {
+      "action": "ARM_FORWARD_DEPTH",
+      "code": 2
+    },
+    {
+      "action": "ARM_BACKWARD_DEPTH",
+      "code": 2
+    },
+    {
+      "action": "HAND_FRONT_BACK",
+      "code": 2
+    },
+    {
+      "action": "TORSO_ROTATION_3D_EXACT",
+      "code": 2
+    },
+    {
+      "action": "SHOULDER_ANGLE_3D",
+      "code": 2
+    },
+    {
+      "action": "WRIST_DEPTH",
+      "code": 2
+    }
+  ]
+}

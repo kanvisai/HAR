@@ -1,0 +1,211 @@
+================================================================================================
+COMPARATIVA BASE vs MOD — TODOS los clips de videos/2/ y videos/6/
+detect_action_json.py  vs  detect_action_json_mod.py
+================================================================================================
+
+Total secuencias (.npy): 46  |  clase 2: 40  |  clase 6: 6
+
+------------------------------------------------------------------------------------------------
+RESUMEN GLOBAL (2/ + 6/)
+------------------------------------------------------------------------------------------------
+Métrica                                      BASE          MOD            Δ
+------------------------------------ ------------ ------------ ------------
+num_segments                                 3909         2153        -1756
+duración media (s)                          2.947        5.560       +2.613
+duración mediana (s)                        1.143        3.040       +1.897
+duración mín (s)                            0.160        0.480       +0.320
+duración máx (s)                           54.411       50.548       -3.863
+segmentos < 0.5s                             1075           25        -1050
+segmentos < 1.0s                             1814          251        -1563
+segmentos ≥ 5.0s                              624          740         +116
+
+Reducción de segmentos: 44.9%
+
+------------------------------------------------------------------------------------------------
+RESUMEN CLASE 2/ (40 secuencias)
+------------------------------------------------------------------------------------------------
+Métrica                                      BASE          MOD            Δ
+------------------------------------ ------------ ------------ ------------
+num_segments                                 3448         1874        -1574
+duración media (s)                          3.005        5.749       +2.744
+duración mediana (s)                        1.131        3.066       +1.936
+duración mín (s)                            0.161        0.484       +0.323
+duración máx (s)                           54.411       50.548       -3.863
+segmentos < 0.5s                              941           20         -921
+segmentos < 1.0s                             1614          212        -1402
+segmentos ≥ 5.0s                              556          648          +92
+
+Reducción de segmentos: 45.6%
+
+------------------------------------------------------------------------------------------------
+RESUMEN CLASE 6/ (6 secuencias)
+------------------------------------------------------------------------------------------------
+Métrica                                      BASE          MOD            Δ
+------------------------------------ ------------ ------------ ------------
+num_segments                                  461          279         -182
+duración media (s)                          2.515        4.291       +1.776
+duración mediana (s)                        1.360        2.880       +1.520
+duración mín (s)                            0.160        0.480       +0.320
+duración máx (s)                           18.080       18.320       +0.240
+segmentos < 0.5s                              134            5         -129
+segmentos < 1.0s                              200           39         -161
+segmentos ≥ 5.0s                               68           92          +24
+
+Reducción de segmentos: 39.5%
+
+------------------------------------------------------------------------------------------------
+POR SECUENCIA
+------------------------------------------------------------------------------------------------
+  # cls user              nB    nM    Δn   meanB   meanM  lt1B  lt1M  clip
+--- --- -------------- ----- ----- ----- ------- ------- ----- -----  --------------------------------------------
+  1   2 user_183         248   136  -112    2.17    4.13   119    13  12Diciembre2025_12Diciembre2025_Cervezas_...
+  2   2 user_315          87    34   -53    3.75    9.42    36     0  12Diciembre2025_12Diciembre2025_Cervezas_...
+  3   2 user_316          53    37   -16    2.87    4.28    12     1  12Diciembre2025_12Diciembre2025_Cervezas_...
+  4   2 user_421          60    34   -26    0.99    1.96    40     7  12Diciembre2025_12Diciembre2025_Cervezas_...
+  5   2 user_542         136    65   -71    3.56    7.89    61     8  12Diciembre2025_12Diciembre2025_Cervezas_...
+  6   2 user_589         133    81   -52    3.10    5.73    70    14  12Diciembre2025_12Diciembre2025_Cervezas_...
+  7   2 user_603         109    68   -41    3.83    6.29    43    11  12Diciembre2025_12Diciembre2025_Cervezas_...
+  8   2 user_1383         76    45   -31    2.11    3.54    44    11  12Diciembre2025_12Diciembre2025_Confitura...
+  9   2 user_1840         52    36   -16    3.00    4.71    19     3  12Diciembre2025_12Diciembre2025_Pasillo_C...
+ 10   2 user_1853         81    47   -34    2.57    4.79    41     6  12Diciembre2025_12Diciembre2025_Pasillo_C...
+ 11   2 user_2110         66    38   -28    2.30    3.97    35     2  12Diciembre2025_12Diciembre2025_Pasillo_C...
+ 12   2 user_2110         37    31    -6    1.43    1.69    11     6  12Diciembre2025_12Diciembre2025_Pasillo_C...
+ 13   2 user_2119         71    35   -36    2.02    4.14    32     7  12Diciembre2025_12Diciembre2025_Pasillo_C...
+ 14   2 user_2121         63    41   -22    6.99   10.97    22     1  12Diciembre2025_12Diciembre2025_Pasillo_C...
+ 15   2 user_2263         31    27    -4    2.96    3.58     8     4  12Diciembre2025_12Diciembre2025_Pasillo_L...
+ 16   2 user_2368         51    35   -16   10.13   15.27    15     2  12Diciembre2025_12Diciembre2025_Pasillo_L...
+ 17   2 user_2610         69    38   -31    4.16    7.74    29     1  12Diciembre2025_12Diciembre2025_Pasillo_L...
+ 18   2 user_2610         81    44   -37    6.73   12.47    32     1  12Diciembre2025_12Diciembre2025_Pasillo_L...
+ 19   2 user_2623        141    49   -92    2.73    7.71    90     6  12Diciembre2025_12Diciembre2025_Pasillo_L...
+ 20   2 user_2659        144    74   -70    3.33    6.77    73     7  13Diciembre2025_13Diciembre2025_Mañana_ce...
+ 21   2 user_2706         42    28   -14    2.44    4.03    16     4  13Diciembre2025_13Diciembre2025_Mañana_ce...
+ 22   2 user_2740         72    35   -37    2.57    5.55    44     4  13Diciembre2025_13Diciembre2025_Mañana_ce...
+ 23   2 user_2759        110    52   -58    3.41    7.20    54     1  13Diciembre2025_13Diciembre2025_Mañana_ce...
+ 24   2 user_2774        131    79   -52    3.27    6.05    52     4  13Diciembre2025_13Diciembre2025_Mañana_ce...
+ 25   2 user_2824        199   106   -93    1.96    4.02    85    11  13Diciembre2025_13Diciembre2025_Mañana_ce...
+ 26   2 user_2835         47    18   -29    1.67    4.41    23     3  13Diciembre2025_13Diciembre2025_Mañana_ce...
+ 27   2 user_2837         82    47   -35    3.01    5.08    35     7  13Diciembre2025_13Diciembre2025_Mañana_ce...
+ 28   2 user_2930         95    53   -42    4.78    9.62    26     2  13Diciembre2025_13Diciembre2025_Mañana_ce...
+ 29   2 user_2980         40    21   -19    2.09    3.77    20     5  13Diciembre2025_13Diciembre2025_Mañana_ce...
+ 30   2 user_3064        143    76   -67    3.44    6.51    61    10  15Diciembre2025_15Diciembre2025_cam1_17_0...
+ 31   2 user_3076        146    73   -73    1.84    3.87    77    10  15Diciembre2025_15Diciembre2025_cam1_17_0...
+ 32   2 user_3802         45    23   -22    0.90    2.05    31     5  15Diciembre2025_15Diciembre2025_cam2_17_0...
+ 33   2 user_3807         79    47   -32    4.27    7.33    29     5  15Diciembre2025_15Diciembre2025_cam2_17_0...
+ 34   2 user_3831        107    54   -53    2.43    4.69    51     7  15Diciembre2025_15Diciembre2025_cam2_17_0...
+ 35   2 user_3848         20    11    -9    2.38    4.22    10     2  15Diciembre2025_15Diciembre2025_cam2_17_0...
+ 36   2 user_3908        105    45   -60    2.00    5.02    61     5  15Diciembre2025_15Diciembre2025_cam2_17_0...
+ 37   2 user_3427        106    58   -48    2.30    4.27    60    10  15Diciembre2025_15Diciembre2025_cam2_9_00...
+ 38   2 user_3746         34    20   -14    1.42    2.81    17     1  15Diciembre2025_15Diciembre2025_cam2_9_00...
+ 39   2 user_4440         17    13    -4    1.42    1.77     4     1  15Diciembre2025_15Diciembre2025_cam3_9_00...
+ 40   2 user_4444         39    20   -19    1.00    2.19    26     4  15Diciembre2025_15Diciembre2025_cam3_9_00...
+ 41   6 user_15361       134    66   -68    1.97    4.36    71     9  robos_3_clips_clip61_000000_000020_6
+ 42   6 user_15362       103    57   -46    1.82    3.37    54    12  robos_3_clips_clip62_000000_000015_6
+ 43   6 user_15363        36    30    -6    4.26    5.17     5     3  robos_3_clips_clip63_000000_000010_6
+ 44   6 user_15364        53    36   -17    3.33    4.94    24     4  robos_3_clips_clip64_000000_000014_6
+ 45   6 user_15364        89    59   -30    2.20    3.36    35     8  robos_3_clips_clip65_000000_000014_6
+ 46   6 user_15366        46    31   -15    3.96    6.03    11     3  robos_3_clips_clip66_000000_000013_6
+
+------------------------------------------------------------------------------------------------
+POR ACCIÓN (agregado 2/+6/)  count BASE→MOD | mean_s BASE→MOD
+------------------------------------------------------------------------------------------------
+ACTION                                           nB     nM     Δn    meanB    meanM
+-------------------------------------------- ------ ------ ------ -------- --------
+PARTIAL_TORSO_ROTATION_HEURISTIC                372    122   +250     0.83     2.20
+SEPARATE_HANDS                                  160    116    +44     4.22     5.63
+JOIN_HANDS                                      133    104    +29     5.30     6.10
+WRIST_NEAR_TORSO_RIGHT                          145     83    +62     2.85     5.93
+WRIST_NEAR_TORSO_LEFT                           142     76    +66     3.68     8.11
+ARM_EXTENDED_RIGHT                              122     77    +45     4.17     6.61
+ELBOW_ALMOST_STRAIGHT_RIGHT                     130     67    +63     2.70     5.07
+WRISTS_APART                                    125     72    +53     2.02     3.39
+ANY_WRIST_NEAR_WAIST                            124     64    +60     3.72     8.09
+WRISTS_TOGETHER                                 114     70    +44     1.85     3.47
+ARM_EXTENDED_LEFT                               113     62    +51     3.98     7.30
+ELBOW_ALMOST_STRAIGHT_LEFT                      116     53    +63     2.65     5.93
+ARM_FLEXED_LEFT                                 115     53    +62     1.98     4.22
+ANY_WRIST_NEAR_CHEST                            105     59    +46     2.58     5.68
+WRIST_NEAR_WAIST_LEFT                           106     58    +48     2.86     6.20
+ARM_DOWN_RIGHT                                   93     70    +23     9.42    12.68
+HAND_CROSS_MIDLINE_LEFT                          98     64    +34     5.43     8.44
+ARM_FLEXED_RIGHT                                114     47    +67     2.01     4.75
+WRIST_NEAR_WAIST_RIGHT                          100     60    +40     3.31     6.24
+PERSON_PROFILE_HEURISTIC                         85     67    +18     5.59     7.16
+HAND_CROSS_MIDLINE_RIGHT                         88     63    +25     5.36     7.49
+ARM_DOWN_LEFT                                    77     60    +17    11.82    15.32
+ARMS_CROSSED                                     75     54    +21     3.50     4.90
+ARM_TUCKED_LEFT                                  89     39    +50     1.59     4.10
+BOTH_WRISTS_NEAR_WAIST                           76     49    +27     2.26     4.43
+WRIST_NEAR_CHEST_LEFT                            63     42    +21     3.51     6.51
+WRIST_NEAR_CHEST_RIGHT                           61     40    +21     1.35     2.84
+ARM_TUCKED_RIGHT                                 67     32    +35     0.86     2.26
+BODY_TURN_RIGHT_HEURISTIC                        64     22    +42     0.76     2.06
+SHOULDER_HIP_TWIST_HEURISTIC                     63     23    +40     1.23     2.91
+ARM_HORIZONTAL_RIGHT                             49     23    +26     1.29     2.47
+LOWER_ARM_RIGHT                                  42     27    +15     0.65     1.19
+BODY_TURN_LEFT_HEURISTIC                         50      8    +42     0.74     2.51
+ARM_HORIZONTAL_LEFT                              35     15    +20     1.09     2.40
+LOWER_ARM_LEFT                                   30     19    +11     0.57     1.23
+RETRACT_ARM_RIGHT                                42      6    +36     0.30     0.86
+PERSON_FRONTAL_HEURISTIC                         25     21     +4     3.85     4.49
+RETRACT_ARM_LEFT                                 37      8    +29     0.35     1.11
+BOTH_WRISTS_NEAR_CHEST                           18     20     -2     1.79     2.66
+TORSO_LEAN_RIGHT                                 22     16     +6     2.80     3.77
+WRIST_TO_WAIST_RIGHT                             23     12    +11     0.65     1.32
+WRIST_NEAR_SHOULDER_RIGHT                        25      9    +16     0.86     2.33
+EXTEND_ARM_RIGHT                                 17     12     +5     0.62     1.15
+WRIST_TO_WAIST_LEFT                              20      9    +11     0.71     0.87
+ARM_ELEVATED_RIGHT                               17      9     +8     1.95     3.16
+RAISE_ARM_RIGHT                                  15     11     +4     1.26     1.62
+TORSO_LEAN_LEFT                                  15     11     +4     4.90     6.69
+EXTEND_ARM_LEFT                                  15     10     +5     0.69     1.16
+WRIST_TO_CHEST_RIGHT                             11     11     +0     0.53     1.43
+ARM_ELEVATED_LEFT                                14      6     +8     1.73     3.40
+WRIST_NEAR_SHOULDER_LEFT                         12      6     +6     1.22     2.95
+WRIST_TO_CHEST_LEFT                              12      5     +7     0.34     0.81
+RAISE_ARM_LEFT                                    8      7     +1     0.95     1.38
+OPEN_ARMS_LATERAL                                 6      4     +2     0.59     2.92
+WRISTS_ABOVE_SHOULDERS                            6      0     +6     0.41     0.00
+BOTH_ARMS_ELEVATED                                5      0     +5     0.41     0.00
+ARMS_OPEN_LATERAL                                 2      0     +2     0.41     0.00
+CLOSE_ARMS_LATERAL                                1      0     +1     0.40     0.00
+
+------------------------------------------------------------------------------------------------
+TOP 20 reducciones de segmentos (BASE−MOD)
+------------------------------------------------------------------------------------------------
+  PARTIAL_TORSO_ROTATION_HEURISTIC: 372 → 122 (Δ -250)  mean 0.83s → 2.20s
+  ARM_FLEXED_RIGHT: 114 → 47 (Δ -67)  mean 2.01s → 4.75s
+  WRIST_NEAR_TORSO_LEFT: 142 → 76 (Δ -66)  mean 3.68s → 8.11s
+  ELBOW_ALMOST_STRAIGHT_RIGHT: 130 → 67 (Δ -63)  mean 2.70s → 5.07s
+  ELBOW_ALMOST_STRAIGHT_LEFT: 116 → 53 (Δ -63)  mean 2.65s → 5.93s
+  WRIST_NEAR_TORSO_RIGHT: 145 → 83 (Δ -62)  mean 2.85s → 5.93s
+  ARM_FLEXED_LEFT: 115 → 53 (Δ -62)  mean 1.98s → 4.22s
+  ANY_WRIST_NEAR_WAIST: 124 → 64 (Δ -60)  mean 3.72s → 8.09s
+  WRISTS_APART: 125 → 72 (Δ -53)  mean 2.02s → 3.39s
+  ARM_EXTENDED_LEFT: 113 → 62 (Δ -51)  mean 3.98s → 7.30s
+  ARM_TUCKED_LEFT: 89 → 39 (Δ -50)  mean 1.59s → 4.10s
+  WRIST_NEAR_WAIST_LEFT: 106 → 58 (Δ -48)  mean 2.86s → 6.20s
+  ANY_WRIST_NEAR_CHEST: 105 → 59 (Δ -46)  mean 2.58s → 5.68s
+  ARM_EXTENDED_RIGHT: 122 → 77 (Δ -45)  mean 4.17s → 6.61s
+  SEPARATE_HANDS: 160 → 116 (Δ -44)  mean 4.22s → 5.63s
+  WRISTS_TOGETHER: 114 → 70 (Δ -44)  mean 1.85s → 3.47s
+  BODY_TURN_RIGHT_HEURISTIC: 64 → 22 (Δ -42)  mean 0.76s → 2.06s
+  BODY_TURN_LEFT_HEURISTIC: 50 → 8 (Δ -42)  mean 0.74s → 2.51s
+  WRIST_NEAR_WAIST_RIGHT: 100 → 60 (Δ -40)  mean 3.31s → 6.24s
+  SHOULDER_HIP_TWIST_HEURISTIC: 63 → 23 (Δ -40)  mean 1.23s → 2.91s
+
+------------------------------------------------------------------------------------------------
+INTERPRETACIÓN
+------------------------------------------------------------------------------------------------
+- Total secuencias: 46 (2/: 40, 6/: 6).
+- Segmentos: 3909 → 2153 (−44.9%).
+- Duración media: 2.95s → 5.56s.
+- Segmentos <1s: 1814 → 251.
+- Clase 2/: 3448 → 1874 (−45.6%), mean 3.01s → 5.75s.
+- Clase 6/: 461 → 279 (−39.5%), mean 2.52s → 4.29s.
+
+Parámetros MOD (har_pose/config_mod.py):
+  min_state_duration_s=0.80  min_action_duration_s=0.45  merge_gap_s=0.70
+  smooth_window=11  action_min_frames=5
+
+JSONs por secuencia en: output/_comparativa_2_y_6_base_vs_mod/<clase>/<CLIP>/
+================================================================================================
