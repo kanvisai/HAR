@@ -1,0 +1,12 @@
+# Python
+__pycache__/
+*.pyc
+.venv/
+venv/
+
+# Archivos temporales
+HAR/temp_output/
+HAR/salida/
+
+# Credenciales
+.env

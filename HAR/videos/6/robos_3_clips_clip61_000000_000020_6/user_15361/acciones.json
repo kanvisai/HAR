@@ -1,0 +1,124 @@
+{
+  "poses": "/home/ignacio/Escritorio/Company/HAR/videos/6/robos_3_clips_clip61_000000_000020_6/user_15361/poses_full.npy",
+  "video": "/home/ignacio/Escritorio/Company/HAR/videos/6/robos_3_clips_clip61_000000_000020_6/clip.mp4",
+  "fps": 12.5,
+  "n_frames": 249,
+  "duracion_s": 19.92,
+  "keypoints": [
+    "hombro_izq",
+    "hombro_der",
+    "codo_izq",
+    "codo_der",
+    "muneca_izq",
+    "muneca_der",
+    "cadera_izq",
+    "cadera_der"
+  ],
+  "nota": "Cada acción es un gesto de brazos o de torso posterior a tener el producto encima. Con 8 puntos no se ve el objeto: el JSON marca el movimiento compatible con esconderlo, para comprobarlo en el vídeo.",
+  "no_observables_con_esta_pose": [
+    "Abrir la mochila, el bolso o el carro",
+    "Meter el brazo en un bolso y sacarlo sin el objeto",
+    "Tapar el producto con otro artículo"
+  ],
+  "acciones": [
+    {
+      "id": "bajar_a_bolsillo",
+      "nombre": "Bajar la mano hacia el bolsillo",
+      "lado": "izquierdo",
+      "frame_inicio": 32,
+      "frame_fin": 42,
+      "detalle": "La mano izquierda baja desde arriba hasta la cadera (la altura relativa cae 0.79).",
+      "t_inicio": "00:02.56",
+      "t_fin": "00:03.44",
+      "duracion_s": 0.88
+    },
+    {
+      "id": "mano_en_bolsillo",
+      "nombre": "Mantener la mano en el bolsillo o la cadera",
+      "lado": "izquierdo",
+      "frame_inicio": 42,
+      "frame_fin": 47,
+      "detalle": "Tras bajar, la muñeca izquierda se queda junto a la cadera.",
+      "t_inicio": "00:03.36",
+      "t_fin": "00:03.84",
+      "duracion_s": 0.48
+    },
+    {
+      "id": "agacharse",
+      "nombre": "Agacharse con las manos a la altura de las piernas",
+      "lado": "ambos",
+      "frame_inicio": 98,
+      "frame_fin": 106,
+      "detalle": "El cuerpo baja en la imagen y las dos muñecas quedan a la altura de las caderas o por debajo.",
+      "t_inicio": "00:07.84",
+      "t_fin": "00:08.56",
+      "duracion_s": 0.72
+    },
+    {
+      "id": "tapar_con_antebrazo",
+      "nombre": "Tapar el producto con el antebrazo",
+      "lado": "derecho",
+      "frame_inicio": 114,
+      "frame_fin": 121,
+      "detalle": "La muñeca derecha cruza por delante de la línea media del pecho.",
+      "t_inicio": "00:09.12",
+      "t_fin": "00:09.76",
+      "duracion_s": 0.64
+    },
+    {
+      "id": "acercar_al_pecho",
+      "nombre": "Acercar el producto al pecho o al abdomen",
+      "lado": "derecho",
+      "frame_inicio": 142,
+      "frame_fin": 162,
+      "detalle": "La muñeca derecha se acerca al abdomen: de 0.67 a 0.36 torsos de distancia.",
+      "t_inicio": "00:11.36",
+      "t_fin": "00:13.04",
+      "duracion_s": 1.68
+    },
+    {
+      "id": "bajar_a_bolsillo",
+      "nombre": "Bajar la mano hacia el bolsillo",
+      "lado": "derecho",
+      "frame_inicio": 184,
+      "frame_fin": 200,
+      "detalle": "La mano derecha baja desde arriba hasta la cadera (la altura relativa cae 0.75).",
+      "t_inicio": "00:14.72",
+      "t_fin": "00:16.08",
+      "duracion_s": 1.36
+    },
+    {
+      "id": "acercar_al_pecho",
+      "nombre": "Acercar el producto al pecho o al abdomen",
+      "lado": "derecho",
+      "frame_inicio": 186,
+      "frame_fin": 198,
+      "detalle": "La muñeca derecha se acerca al abdomen: de 0.92 a 0.16 torsos de distancia.",
+      "t_inicio": "00:14.88",
+      "t_fin": "00:15.92",
+      "duracion_s": 1.04
+    },
+    {
+      "id": "agacharse",
+      "nombre": "Agacharse con las manos a la altura de las piernas",
+      "lado": "ambos",
+      "frame_inicio": 192,
+      "frame_fin": 224,
+      "detalle": "El cuerpo baja en la imagen y las dos muñecas quedan a la altura de las caderas o por debajo.",
+      "t_inicio": "00:15.36",
+      "t_fin": "00:18.00",
+      "duracion_s": 2.64
+    },
+    {
+      "id": "mano_en_bolsillo",
+      "nombre": "Mantener la mano en el bolsillo o la cadera",
+      "lado": "derecho",
+      "frame_inicio": 200,
+      "frame_fin": 209,
+      "detalle": "Tras bajar, la muñeca derecha se queda junto a la cadera.",
+      "t_inicio": "00:16.00",
+      "t_fin": "00:16.80",
+      "duracion_s": 0.8
+    }
+  ]
+}

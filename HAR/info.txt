@@ -1,0 +1,180 @@
+Información del programa
+========================
+
+Detecta gestos de esconder un producto a partir de un esqueleto ya calculado.
+No ve el objeto: marca movimientos de brazos y de torso compatibles con
+esconderlo después de tenerlo en la mano.
+
+Entrada
+-------
+poses_full.npy con forma (frames, 8, 2). Coordenadas normalizadas de 0 a 1,
+el eje y crece hacia abajo. poses.npy no se usa: no está alineado con los frames.
+
+Puntos, en este orden:
+  0 hombro izquierdo
+  1 hombro derecho
+  2 codo izquierdo
+  3 codo derecho
+  4 muñeca izquierda
+  5 muñeca derecha
+  6 cadera izquierda
+  7 cadera derecha
+
+El lado es el de la persona, no el de la imagen. Las distancias se miden en
+torsos (del centro de los hombros al centro de las caderas). La altura vale 0
+en la cadera y 1 en el hombro.
+
+El clip.mp4 y meta.json se buscan en la carpeta del clip (la padre de
+user_XXXX). El fps sale de meta.json; si no está, se usa 12.5. El esqueleto
+se suaviza con una mediana de 3 frames antes de medir y de dibujar. Un codo
+casi cerrado del todo, o un brazo demasiado corto, se descarta: suele ser un
+punto mal colocado por el tracker, sobre todo de espaldas.
+
+Activar y desactivar acciones
+-----------------------------
+El fichero acciones_config.json, en la misma carpeta que los programas,
+lista cada acción con "activa": true o false.
+
+  false  la apaga: no sale en el JSON ni en la ventana
+  true   la vuelve a encender
+
+Si falta el fichero, o falta un id, esa acción queda encendida. Hay que
+guardar el fichero y ejecutar de nuevo. El filtro se aplica al final, así que
+los detectores internos siguen corriendo.
+
+Ahora mismo "agacharse" está en false. El resto está en true.
+
+"Mantener la mano en el bolsillo" se calcula a partir de "Bajar la mano hacia
+el bolsillo", antes del filtro. Si apagas solo la bajada, la estancia en la
+cadera puede seguir apareciendo. Para quitar las dos, apaga también
+mano_en_bolsillo.
+
+Programas
+---------
+Los tres leen el npy. Si no se pasa ruta, usan el clip 61
+(videos/6/...clip61.../user_15361/poses_full.npy).
+
+detect_json.py
+  Escribe acciones.json en la carpeta del usuario, junto al npy.
+  También escribe temp_output/acciones.json. Los dos se sustituyen en cada
+  ejecución. Con -o se cambia el JSON de al lado del npy; el de temp_output
+  se sigue escribiendo, salvo que sea el mismo archivo.
+  python3 detect_json.py /ruta/user_x/poses_full.npy
+  python3 detect_json.py /ruta/user_x/poses_full.npy -o /ruta/salida.json
+
+visualize_ske.py
+  Abre una ventana con el esqueleto ampliado (960×720) y la lista a la derecha.
+  Además escribe temp_output/esqueleto.mp4, sustituido en cada ejecución.
+  python3 visualize_ske.py /ruta/user_x/poses_full.npy
+
+visualize_sup.py
+  Abre la ventana del mp4 con el esqueleto encima y, además, escribe en
+  temp_output estos tres archivos, sustituidos en cada ejecución:
+    acciones.json
+    esqueleto.mp4
+    superposicion.mp4
+  El clip.mp4 se busca junto a la carpeta del usuario. Con --video se puede
+  indicar otro mp4.
+  python3 visualize_sup.py /ruta/user_x/poses_full.npy
+  python3 visualize_sup.py /ruta/user_x/poses_full.npy --video /ruta/clip.mp4
+
+temp_output está junto a los programas. Los nombres son fijos: cada ejecución
+pisa el archivo anterior, no crea uno nuevo por clip.
+
+Ventana
+-------
+Espacio pausa. Flecha izquierda, o A, retrocede un frame. Flecha derecha, o D,
+avanza un frame. Q, o Escape, cierra la ventana.
+Al llegar al final se queda en el último frame para poder leer la lista.
+
+La lista de la derecha empieza vacía. Mientras una acción sigue, el recuadro
+del vídeo se pone rojo, el brazo implicado se pinta de rojo y arriba de la
+lista sale "En curso". Cuando termina, se añade una fila con el intervalo
+(inicio y fin), el nombre y el lado. La siguiente acción ocupa la fila de
+debajo. Si no caben, la lista se desplaza para dejar visible la última.
+El reloj y el número de frame van abajo a la izquierda, para no tapar el
+rótulo de la cámara.
+
+Qué hay en el JSON
+-------------------
+poses, video, fps, n_frames, duracion_s, keypoints, nota,
+no_observables_con_esta_pose, acciones_desactivadas, y la lista acciones.
+
+Cada acción lleva:
+  id, nombre, lado (izquierdo, derecho o ambos)
+  frame_inicio, frame_fin
+  t_inicio, t_fin, duracion_s
+  detalle: la medida del esqueleto que ha disparado el aviso
+
+Acciones
+--------
+acercar_al_pecho
+  Acercar el producto al pecho o al abdomen.
+  La muñeca baja y se acerca al abdomen. No cuenta un brazo estirado hacia el estante.
+
+pegar_al_torso
+  Pegar el antebrazo al torso.
+  El codo está doblado y la muñeca queda junto al eje del cuerpo, a media altura.
+
+pasar_de_mano
+  Pasar el objeto de una mano a la otra.
+  Las dos muñecas se juntan delante del torso y al menos un codo está doblado.
+  Hace falta ver el cuerpo algo de frente; de perfil puro las muñecas se solapan y no se usa.
+
+tapar_con_antebrazo
+  Tapar el producto con el antebrazo.
+  Una muñeca cruza por delante de la línea media del pecho.
+
+una_mano_oculta
+  Una mano a la vista y la otra oculta junto al cuerpo.
+  Una muñeca permanece junto a la cadera y la otra está separada, a media altura.
+
+bajar_a_bolsillo
+  Bajar la mano hacia el bolsillo.
+  Hay dos formas de entrar. Desde arriba: la mano baja de forma continua hasta
+  la cadera. Desde el pecho: la mano estaba a media altura o más, baja hasta
+  la cadera y se queda ahí un instante. Entre medias el tracker puede perder
+  el codo; esos frames no se exigen. Un brazo que ya colgaba no cuenta.
+
+mano_en_bolsillo
+  Mantener la mano en el bolsillo o la cadera.
+  Solo justo después de una bajada, y durante un tramo corto (menos de un segundo).
+  Con estos puntos no se distingue el bolsillo de la mano apoyada en la cadera.
+
+subir_por_torso
+  Subir la mano por el torso, contra el cuerpo.
+  La muñeca sube desde la cadera hacia el pecho sin separarse del torso.
+  El brazo estirado hacia el estante no cuenta.
+
+brazos_cruzados
+  Cruzar los brazos sobre el pecho.
+  Cada muñeca pasa al lado contrario, con los codos doblados.
+
+girar_torso
+  Girar el torso de lado para tapar las manos.
+  Los hombros pasan de verse anchos a verse estrechos, el giro se mantiene
+  y una mano queda junto al cuerpo.
+  Un cambio breve del ancho de hombros no cuenta.
+
+agacharse
+  Agacharse con las manos a la altura de las piernas.
+  El cuerpo baja en la imagen y las dos muñecas quedan a la altura de las
+  caderas o por debajo. En acciones_config.json está apagada.
+
+mano_a_espalda
+  Llevar una mano a la espalda o a la cadera contraria.
+  La muñeca queda claramente más cerca de la cadera contraria que de la suya.
+  Solo se evalúa si se ven las dos caderas, algo de frente.
+
+brazo_rigido
+  Caminar con un brazo pegado al cuerpo, sin balanceo.
+  El cuerpo se desplaza, un brazo casi no se mueve respecto a su cadera y el otro sí oscila.
+  El brazo quieto tiene que ir a media altura, no colgando del todo.
+
+No se puede ver con esta pose
+------------------------------
+  Abrir la mochila, el bolso o el carro.
+  Meter el brazo en un bolso y sacarlo sin el objeto.
+  Tapar el producto con otro artículo.
+
+Esas tres quedan anotadas en el JSON, en no_observables_con_esta_pose, y no se emiten como acciones.

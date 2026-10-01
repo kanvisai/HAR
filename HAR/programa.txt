@@ -1,0 +1,98 @@
+Qué hace el programa
+====================
+
+A partir de un esqueleto ya calculado marca gestos de brazos y de torso
+compatibles con esconder un producto después de tenerlo en la mano. Con 8
+puntos no se ve el objeto, ni la bolsa, ni la ropa: cada aviso es un movimiento
+que encaja con eso, para comprobarlo en el vídeo.
+
+Entrada
+-------
+poses_full.npy con forma (frames, 8, 2). Coordenadas de 0 a 1, el eje y crece
+hacia abajo. poses.npy no se usa: no está alineado frame a frame con el vídeo.
+
+Puntos, en este orden:
+  0 hombro izquierdo
+  1 hombro derecho
+  2 codo izquierdo
+  3 codo derecho
+  4 muñeca izquierda
+  5 muñeca derecha
+  6 cadera izquierda
+  7 cadera derecha
+
+El lado es el de la persona, no el de la imagen. El clip.mp4 y meta.json se
+buscan en la carpeta del clip, la padre de user_XXXX. El fps sale de meta.json;
+si no está, se usa 12.5.
+
+Medidas
+-------
+Antes de medir y de dibujar, el esqueleto se suaviza con una mediana de 3 frames.
+
+La unidad de distancia es el torso: del centro de los hombros al centro de las
+caderas. La altura vale 0 en la cadera y 1 en el hombro; por encima del hombro
+pasa de 1.
+
+El abdomen es un punto bajo del torso, más cerca de la cadera que del hombro.
+El pecho es el punto medio. El eje del torso es el segmento del hombro de ese
+brazo a su cadera.
+
+Un frame de brazo no vale si el torso está mal, si el brazo o el antebrazo
+quedan demasiado cortos, o si el codo se cierra a 40 grados o menos. Eso suele
+ser el tracker, sobre todo de espaldas, y no un gesto.
+
+Cómo se detecta
+---------------
+Cada gesto se busca por separado sobre esas medidas. El detalle de cada uno
+está en el txt con su id. El orden y la única dependencia entre gestos están
+en dependencias.txt.
+
+Al final se lee acciones_config.json. "activa": false quita ese id del JSON y
+de la ventana. "activa": true lo vuelve a dejar. Si falta el fichero o falta
+un id, esa acción queda encendida. Hay que guardar y ejecutar de nuevo.
+
+Ahora mismo agacharse está en false. El resto está en true.
+
+Tres gestos de la lista original no se pueden ver con esta pose y no se emiten:
+abrir la mochila, el bolso o el carro; meter el brazo en un bolso y sacarlo
+sin el objeto; tapar el producto con otro artículo. Quedan anotados en el JSON,
+en no_observables_con_esta_pose.
+
+Programas
+---------
+Los tres están en la carpeta HAR. Si no se pasa ruta, usan el clip 61.
+
+detect_json.py
+  Escribe acciones.json junto al npy y también temp_output/acciones.json.
+  Con -o se cambia el JSON de al lado del npy. El de temp_output se sigue
+  escribiendo, salvo que sea el mismo archivo.
+
+visualize_ske.py
+  Abre la ventana del esqueleto ampliado y escribe temp_output/esqueleto.mp4.
+
+visualize_sup.py
+  Abre la ventana del mp4 con el esqueleto encima y escribe en temp_output
+  acciones.json, esqueleto.mp4 y superposicion.mp4.
+  Con --video se puede indicar otro mp4.
+
+Los nombres de temp_output son fijos: cada ejecución sustituye el archivo
+anterior.
+
+Ventana
+-------
+Espacio pausa. Flecha izquierda, o A, retrocede un frame. Flecha derecha, o D,
+avanza un frame. Q, o Escape, cierra.
+
+La lista de la derecha empieza vacía. Mientras una acción sigue, el recuadro
+se pone rojo, el brazo implicado se pinta de rojo y arriba sale "En curso".
+Cuando termina, se añade una fila con el intervalo, el nombre y el lado.
+Al llegar al final la ventana se queda en el último frame.
+
+Qué hay en el JSON
+------------------
+poses, video, fps, n_frames, duracion_s, keypoints, nota,
+no_observables_con_esta_pose, acciones_desactivadas y la lista acciones.
+
+Cada acción lleva id, nombre, lado (izquierdo, derecho o ambos),
+frame_inicio, frame_fin, t_inicio, t_fin, duracion_s y detalle.
+El detalle es la medida que ha disparado el aviso.

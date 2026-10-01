@@ -1,0 +1,20 @@
+Pegar el antebrazo al torso
+===========================
+id: pegar_al_torso
+lado: el del brazo pegado
+
+No es un viaje de la mano. El codo se queda doblado y la muñeca permanece
+junto al eje de ese brazo, a media altura, durante al menos unos 0,45 segundos.
+
+En ese tramo, frame a frame:
+
+  El brazo vale.
+  El codo está doblado, con un ángulo entre 55 y 125 grados.
+  La muñeca está a menos de 0,20 torsos del eje (hombro–cadera de ese lado).
+  La altura está entre 0,18 y 0,62: ni colgando del todo ni a la altura del hombro.
+
+Un codo casi cerrado del todo no vale: se toma como un punto mal colocado.
+Un brazo estirado a lo largo del cuerpo tampoco: el ángulo se sale de ese rango.
+
+No depende de otra acción. Puede coincidir en el tiempo con acercar_al_pecho
+o con subir_por_torso; cada uno se anota por su cuenta.

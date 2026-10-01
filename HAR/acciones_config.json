@@ -1,0 +1,70 @@
+{
+  "nota": "Cambia activa a false para apagar una acción y a true para volver a encenderla. Guarda el fichero y ejecuta de nuevo detect_json.py o los visualizadores.",
+  "acciones": [
+    {
+      "id": "acercar_al_pecho",
+      "nombre": "Acercar el producto al pecho o al abdomen",
+      "activa": true
+    },
+    {
+      "id": "pegar_al_torso",
+      "nombre": "Pegar el antebrazo al torso",
+      "activa": true
+    },
+    {
+      "id": "pasar_de_mano",
+      "nombre": "Pasar el objeto de una mano a la otra",
+      "activa": true
+    },
+    {
+      "id": "tapar_con_antebrazo",
+      "nombre": "Tapar el producto con el antebrazo",
+      "activa": false
+    },
+    {
+      "id": "una_mano_oculta",
+      "nombre": "Una mano a la vista y la otra oculta junto al cuerpo",
+      "activa": true
+    },
+    {
+      "id": "bajar_a_bolsillo",
+      "nombre": "Bajar la mano hacia el bolsillo",
+      "activa": true
+    },
+    {
+      "id": "mano_en_bolsillo",
+      "nombre": "Mantener la mano en el bolsillo o la cadera",
+      "activa": true
+    },
+    {
+      "id": "subir_por_torso",
+      "nombre": "Subir la mano por el torso, contra el cuerpo",
+      "activa": true
+    },
+    {
+      "id": "brazos_cruzados",
+      "nombre": "Cruzar los brazos sobre el pecho",
+      "activa": true
+    },
+    {
+      "id": "girar_torso",
+      "nombre": "Girar el torso de lado para tapar las manos",
+      "activa": false
+    },
+    {
+      "id": "agacharse",
+      "nombre": "Agacharse con las manos a la altura de las piernas",
+      "activa": false
+    },
+    {
+      "id": "mano_a_espalda",
+      "nombre": "Llevar una mano a la espalda o a la cadera contraria",
+      "activa": true
+    },
+    {
+      "id": "brazo_rigido",
+      "nombre": "Caminar con un brazo pegado al cuerpo, sin balanceo",
+      "activa": true
+    }
+  ]
+}

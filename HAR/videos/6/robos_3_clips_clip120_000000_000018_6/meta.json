@@ -1,0 +1,38 @@
+{
+    "clip_name": "robos_3_clips_clip120_000000_000018_6",
+    "video_source": "/home/angel/videos/robos_3/clips/clip120.mp4",
+    "row_csv": 121,
+    "t_start": "00:00:00",
+    "t_end": "00:00:18",
+    "clip_duration": 18,
+    "fps": 12.5,
+    "frame_count": 224,
+    "video_frame_count": 225,
+    "min_valid_frames": 180,
+    "cat": "6",
+    "yolo_model": "/home/angel/IAModel/experiments/engine/yolo11x-pose.engine",
+    "yolo_backend": "engine",
+    "users": [
+        {
+            "track_id": 15443,
+            "valid_pct": 52.2,
+            "rel": 0.52,
+            "valid_frames": 117,
+            "total_frames": 224,
+            "poses_full_count": 224,
+            "poses_filtered_count": 117,
+            "passes_filters": false,
+            "keypoint_confidence_avg": 0.903,
+            "occlusion_ratio": 35.3,
+            "bbox_aspect_ratio": 2.748,
+            "subject_velocity": 0.00494,
+            "clothes": {
+                "top": "RGB(66,55,47)",
+                "bottom": "RGB(73,64,58)"
+            },
+            "user_cat": 6,
+            "is_primary_robber": true
+        }
+    ],
+    "clip_video": "clip.mp4"
+}

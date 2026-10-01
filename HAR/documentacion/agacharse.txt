@@ -1,0 +1,20 @@
+Agacharse con las manos a la altura de las piernas
+==================================================
+id: agacharse
+lado: ambos
+
+El cuerpo baja en la imagen y las dos muñecas quedan a la altura de las
+caderas o por debajo. La ventana es de unos 0,70 segundos.
+
+En esa ventana:
+
+  El torso vale en la mayor parte de los frames.
+  El centro de las caderas desciende en la imagen al menos un poco
+  (0,045 en coordenadas de 0 a 1).
+  Al final, las dos muñecas valen y las dos están por debajo de altura 0,25.
+
+En acciones_config.json esta acción está ahora en false: el detector puede
+encontrarla, y el filtro la quita del JSON y de la ventana. Para verla, hay
+que ponerla en true y ejecutar de nuevo.
+
+No depende de otra acción.
