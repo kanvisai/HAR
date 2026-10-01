@@ -1,0 +1,26 @@
+Turn the torso sideways to hide the hands
+=========================================
+id: turn_torso
+side: both
+
+The shoulders go from looking wide to looking narrow, the body stays sideways
+and one hand stays close to the torso. The window is about 0.70 seconds.
+
+In that window:
+
+  The torso is valid on most frames.
+  At the start, shoulder width is wide (at least 0.48 torso lengths of width
+  relative to torso height).
+  At the end, that width has fallen below 0.22 and the fall is at least 0.26.
+  Just afterwards, the body stays narrow: the median of the following frames
+  remains sideways.
+  At least one hand stays near the axis during the turn (median distance under
+  0.35 torso lengths).
+
+A brief change in shoulder width, without staying sideways, does not count.
+Already being in profile the whole time does not count either: the change from
+front to side is required.
+
+It does not depend on another action.
+
+In actions_config.json this action is currently off.

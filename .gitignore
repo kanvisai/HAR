@@ -10,3 +10,4 @@ HAR/salida/
 
 # Credenciales
 .env
+HAR_en/temp_output/

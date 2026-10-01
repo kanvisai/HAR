@@ -1,0 +1,180 @@
+Program information
+===================
+
+Detects gestures of concealing a product from a skeleton that is already computed.
+It does not see the object: it marks arm and torso movements consistent with
+hiding it after it is already in the hand.
+
+Input
+-----
+poses_full.npy with shape (frames, 8, 2). Coordinates normalized from 0 to 1,
+the y axis grows downward. poses.npy is not used: it is not aligned with the frames.
+
+Points, in this order:
+  0 left shoulder
+  1 right shoulder
+  2 left elbow
+  3 right elbow
+  4 left wrist
+  5 right wrist
+  6 left hip
+  7 right hip
+
+Side is the person's, not the image's. Distances are measured in torso lengths
+(from the shoulder center to the hip center). Height is 0 at the hip and 1 at
+the shoulder.
+
+clip.mp4 and meta.json are looked up in the clip folder (the parent of
+user_XXXX). fps comes from meta.json; if it is missing, 12.5 is used. The
+skeleton is smoothed with a 3-frame median before measuring and drawing. An
+elbow that is almost fully closed, or an arm that is too short, is discarded:
+it is usually a point misplaced by the tracker, especially from behind.
+
+Turning actions on and off
+--------------------------
+The file actions_config.json, in the same folder as the programs, lists each
+action with "enabled": true or false.
+
+  false  turns it off: it does not appear in the JSON or in the window
+  true   turns it back on
+
+If the file is missing, or an id is missing, that action stays on. Save the
+file and run again. The filter is applied at the end, so the internal
+detectors still run.
+
+Right now cover_with_forearm, turn_torso and crouch are false. The rest are true.
+
+"Keep the hand in the pocket or at the hip" is computed from "Lower the hand
+toward the pocket", before the filter. If you turn off only the drop, the stay
+at the hip can still appear. To remove both, also turn off hand_at_pocket.
+
+Programs
+--------
+All three read the npy. If no path is given, they use clip 61
+(videos/6/...clip61.../user_15361/poses_full.npy).
+
+detect_json.py
+  Writes actions.json in the user folder, next to the npy.
+  It also writes temp_output/actions.json. Both are replaced on every run.
+  -o changes the JSON next to the npy; the temp_output copy is still written,
+  unless it is the same file.
+  python3 detect_json.py /path/user_x/poses_full.npy
+  python3 detect_json.py /path/user_x/poses_full.npy -o /path/output.json
+
+visualize_ske.py
+  Opens a window with the enlarged skeleton (960×720) and the list on the right.
+  It also writes temp_output/skeleton.mp4, replaced on every run.
+  python3 visualize_ske.py /path/user_x/poses_full.npy
+
+visualize_sup.py
+  Opens the mp4 window with the skeleton on top and also writes these three
+  files into temp_output, replaced on every run:
+    actions.json
+    skeleton.mp4
+    overlay.mp4
+  clip.mp4 is looked up next to the user folder. --video can point at another mp4.
+  python3 visualize_sup.py /path/user_x/poses_full.npy
+  python3 visualize_sup.py /path/user_x/poses_full.npy --video /path/clip.mp4
+
+temp_output sits next to the programs. The names are fixed: each run overwrites
+the previous file. It does not create a new file per clip.
+
+Window
+------
+Space pauses. Left arrow, or A, steps back one frame. Right arrow, or D, steps
+forward one frame. Q, or Escape, closes the window.
+At the end it stays on the last frame so the list can be read.
+
+The list on the right starts empty. While an action is still going, the video
+frame gets a red border, the arm involved is drawn in red, and "In progress"
+appears at the top of the list. When it ends, a row is added with the time
+range (start and end), the name and the side. The next action takes the row
+below. If they do not fit, the list scrolls to keep the last one visible.
+The clock and the frame number sit at the bottom left, so they do not cover
+the camera label.
+
+What is in the JSON
+-------------------
+poses, video, fps, n_frames, duration_s, keypoints, note,
+not_observable_with_this_pose, disabled_actions, and the actions list.
+
+Each action has:
+  id, name, side (left, right or both)
+  frame_start, frame_end
+  t_start, t_end, duration_s
+  detail: the skeleton measurement that triggered the notice
+
+Actions
+-------
+bring_to_chest
+  Bring the product to the chest or abdomen.
+  The wrist drops and moves closer to the abdomen. A straight reach to the shelf does not count.
+
+forearm_on_torso
+  Press the forearm against the torso.
+  The elbow is bent and the wrist stays near the body axis, at mid height.
+
+hand_to_hand
+  Pass the object from one hand to the other.
+  Both wrists meet in front of the torso and at least one elbow is bent.
+  The body must be seen somewhat from the front; in a pure profile the wrists overlap and this is not used.
+
+cover_with_forearm
+  Cover the product with the forearm.
+  One wrist crosses in front of the chest midline.
+  In actions_config.json this action is currently off.
+
+one_hand_hidden
+  One hand in view and the other hidden against the body.
+  One wrist stays by the hip and the other is away from the body, at mid height.
+
+lower_to_pocket
+  Lower the hand toward the pocket.
+  There are two ways in. From above: the hand drops continuously to the hip.
+  From the chest: the hand was at mid height or higher, drops to the hip and
+  stays there for a moment. In between the tracker may lose the elbow; those
+  frames are not required. An arm that was already hanging does not count.
+
+hand_at_pocket
+  Keep the hand in the pocket or at the hip.
+  Only right after a drop, and only for a short stretch (under a second).
+  With these points the pocket cannot be told apart from a hand resting on the hip.
+
+hand_up_torso
+  Slide the hand up the torso, against the body.
+  The wrist rises from the hip toward the chest without leaving the torso.
+  A straight reach up to the shelf does not count.
+
+arms_crossed
+  Cross the arms over the chest.
+  Each wrist crosses to the opposite side, with the elbows bent.
+
+turn_torso
+  Turn the torso sideways to hide the hands.
+  The shoulders go from looking wide to looking narrow, the turn is held,
+  and one hand stays close to the body.
+  A brief change in shoulder width does not count.
+  In actions_config.json this action is currently off.
+
+crouch
+  Crouch with the hands at leg height.
+  The body drops in the image and both wrists end at hip height or below.
+  In actions_config.json this action is currently off.
+
+hand_behind_back
+  Move one hand to the back or to the opposite hip.
+  The wrist is clearly closer to the opposite hip than to its own.
+  It is only evaluated when both hips are visible, somewhat from the front.
+
+stiff_arm
+  Walk with one arm held against the body, without swinging.
+  The body is moving, one arm barely moves relative to its hip and the other does swing.
+  The still arm must sit at mid height, not hanging all the way down.
+
+Not visible with this pose
+--------------------------
+  Open the backpack, bag, or cart.
+  Put an arm into a bag and pull it out empty.
+  Cover the product with another item.
+
+Those three are noted in the JSON, under not_observable_with_this_pose, and are not emitted as actions.

@@ -1,0 +1,46 @@
+Lower the hand toward the pocket
+================================
+id: lower_to_pocket
+side: the arm that drops
+
+The hand arrives at the hip. There are two ways to see it, and both write this
+same id. An arm that was already hanging does not count in either of them.
+
+From above
+----------
+Over a window of about 0.85 seconds the hand drops continuously:
+
+  The arm is valid on most frames.
+  At the start it is high: height 0.75 or more, and the median of the previous
+  frames is also high.
+  Height keeps falling (the middle frame sits between the start and the end).
+  The fall is at least 0.40.
+  At the end, height is 0.32 or less and the wrist is 0.48 torso lengths or
+  less from its hip.
+
+From the chest
+--------------
+This covers a shorter drop, or the case where the tracker loses the elbow on
+the way. The search looks for the first frame where the hand is already at the hip:
+
+  The arm is valid, height is 0.22 or less, and the distance to the hip is
+  0.32 torso lengths or less.
+  The previous frame was not yet that low. An arm that was already resting
+  down there is not repeated.
+
+From that frame it looks back, between about 0.24 s and about 1.05 s, skipping
+frames where the arm is not valid. There must be a valid wrist at height 0.55
+or more, a recent median that is also high, and a fall of at least 0.35.
+
+After that, the hand must stay low for about 0.40 s: height under 0.30 and
+distance to the hip under 0.42.
+
+The notice runs from the high frame to the frame where it enters the hip. The
+time it stays there does not extend this action: that, if it lasts, is
+hand_at_pocket.
+
+If both forms describe the same gesture and they land within 4 frames, they
+are merged into a single drop.
+
+This action does not read any other id. hand_at_pocket does read this one:
+see dependencies.txt.

@@ -1,0 +1,20 @@
+Cover the product with the forearm
+==================================
+id: cover_with_forearm
+side: the arm that crosses
+
+One wrist crosses in front of the chest midline and stays there for at least
+about 0.28 seconds.
+
+In that stretch:
+
+  The arm is valid.
+  The torso is seen somewhat from the front, so the midline means something.
+  The wrist crosses toward the opposite side of the body.
+  The elbow is not fully straight (angle under 155 degrees).
+  Height is between 0.20 and 0.95.
+
+It does not depend on another action. If both arms cross at the same time,
+arms_crossed can also appear: they are different notices.
+
+In actions_config.json this action is currently off.

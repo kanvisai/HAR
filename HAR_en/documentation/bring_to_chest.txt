@@ -1,0 +1,23 @@
+Bring the product to the chest or abdomen
+=========================================
+id: bring_to_chest
+side: the arm that moves in
+
+The wrist starts away from the body and, in about 0.7 seconds, drops and moves
+toward the abdomen. The abdomen is the low point of the torso, closer to the
+hip than to the shoulder.
+
+To count, inside that window:
+
+  The arm is valid on most frames.
+  At the start, the hand is far from the abdomen (at least 0.60 torso lengths)
+  and at mid height or higher (height 0.45 or more).
+  At the end, it is close (0.48 torso lengths or less). It has closed at least
+  0.22 torso lengths and dropped at least 0.12 in height.
+  The end sits between the abdomen and the chest: height between 0.22 and 0.72.
+
+A straight reach to the shelf does not enter: the hand stays high and far
+from the abdomen.
+
+It does not depend on another action. If the same arm repeats it with a gap of
+4 frames or fewer, the spans are merged into one.

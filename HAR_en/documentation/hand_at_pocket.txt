@@ -1,0 +1,24 @@
+Keep the hand in the pocket or at the hip
+=========================================
+id: hand_at_pocket
+side: the same side as the drop
+
+The wrist stays by the hip right after it has dropped. With these points the
+pocket cannot be told apart from a hand resting on the hip.
+
+It is created only if a lower_to_pocket of that side already exists. It starts
+at the end frame of that drop and continues while:
+
+  the arm is valid,
+  the distance to its hip is under 0.40 torso lengths,
+  height is under 0.32.
+
+The follow stops at 0.70 seconds. If the stretch reaches at least about 0.35
+seconds, the stay is emitted. If the hand leaves earlier, there is no notice.
+
+The interval can overlap the end of the drop a little, because it starts on
+the same frame where the drop ends.
+
+Turning lower_to_pocket off in actions_config.json does not stop this stay
+from being computed: the filter is applied afterwards. To remove it,
+hand_at_pocket must also be set to false. The detail is in dependencies.txt.

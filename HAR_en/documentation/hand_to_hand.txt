@@ -1,0 +1,20 @@
+Pass the object from one hand to the other
+==========================================
+id: hand_to_hand
+side: both
+
+Both wrists meet in front of the torso, with at least one elbow bent, for at
+least about 0.5 seconds.
+
+In that stretch:
+
+  Both arms are valid.
+  The separation between wrists is under 0.28 torso lengths.
+  The body is seen somewhat from the front (the shoulders are not almost on the same line).
+  The more bent elbow has an angle between 50 and 145 degrees.
+  Both hands are at mid height: between 0.14 and 0.62.
+
+In a pure profile the wrists overlap in the image even if each one is in its
+own place, and that case is not used.
+
+It does not depend on another action.
