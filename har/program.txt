@@ -1,0 +1,38 @@
+What the program does
+=====================
+
+From a skeleton that is already computed, it marks six gestures:
+
+  extend_arm            Extend the arm
+  extend_forearm        Extend the forearm
+  retract_arm           Retract the arm
+  turn_torso            Turn the torso
+  crouch                Crouch a little
+  steady_wrist_waist    Steady wrist-to-waist distance
+
+The detail of each one is in documentation/, in the txt named with its id.
+The libraries are in dependencies.txt. None of the six gestures depends on another.
+
+Folder 3 is the cart: reach, fold, turn, small crouch.
+Folder 4 is the shelf: the arm extends, then retracts, then the wrist-to-waist
+distance stays steady while the person walks with the object.
+Folder 0 is people walking past, used to see what the detector marks when
+there is no cart and no shelf.
+
+Input
+-----
+poses_full.npy with shape (frames, 8, 2). Coordinates from 0 to 1, the y axis
+grows downward. Side is the person's, not the image's. The unit of distance is
+the torso. A missing point stays missing.
+
+Programs
+--------
+detect_json.py writes actions.json next to the npy and temp_output/actions.json.
+visualize_ske.py opens the skeleton window and writes temp_output/skeleton.mp4.
+visualize_sup.py opens the video window and also writes actions.json,
+skeleton.mp4 and overlay.mp4 into temp_output. The list on the right shows
+each finished action and how long it lasted.
+
+Space pauses. Arrows, or A and D, move one frame. Q closes.
+
+actions_config.json turns each id on or off. All six start enabled.

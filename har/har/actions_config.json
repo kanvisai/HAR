@@ -1,0 +1,35 @@
+{
+  "note": "Set enabled to false to turn an action off and to true to turn it back on. Save the file and run the programs again.",
+  "actions": [
+    {
+      "id": "extend_arm",
+      "name": "Extend the arm",
+      "enabled": true
+    },
+    {
+      "id": "extend_forearm",
+      "name": "Extend the forearm",
+      "enabled": false
+    },
+    {
+      "id": "retract_arm",
+      "name": "Retract the arm",
+      "enabled": true
+    },
+    {
+      "id": "turn_torso",
+      "name": "Turn the torso",
+      "enabled": true
+    },
+    {
+      "id": "crouch",
+      "name": "Crouch a little",
+      "enabled": true
+    },
+    {
+      "id": "steady_wrist_waist",
+      "name": "Steady wrist-to-waist distance",
+      "enabled": true
+    }
+  ]
+}

@@ -1,0 +1,37 @@
+{
+    "clip_name": "12Diciembre2025_12Diciembre2025_Cervezas_Cervezas_tarde_001905_001915_0",
+    "video_source": "/home/angel/videos/12Diciembre2025/12Diciembre2025/Cervezas/Cervezas_tarde.avi",
+    "row_csv": 30,
+    "t_start": "00:19:05",
+    "t_end": "00:19:15",
+    "clip_duration": 10,
+    "fps": 12.333333333333334,
+    "frame_count": 109,
+    "video_frame_count": 124,
+    "min_valid_frames": 98,
+    "cat": "0",
+    "yolo_model": "/home/angel/IAModel/experiments/engine/yolo11x-pose.engine",
+    "yolo_backend": "engine",
+    "users": [
+        {
+            "track_id": 486,
+            "valid_pct": 81.7,
+            "rel": 0.82,
+            "valid_frames": 89,
+            "total_frames": 109,
+            "poses_full_count": 109,
+            "poses_filtered_count": 89,
+            "passes_filters": false,
+            "keypoint_confidence_avg": 0.879,
+            "occlusion_ratio": 8.3,
+            "bbox_aspect_ratio": 2.317,
+            "subject_velocity": NaN,
+            "clothes": {
+                "top": "RGB(63,54,56)",
+                "bottom": "RGB(60,42,33)"
+            },
+            "user_cat": 0
+        }
+    ],
+    "clip_video": "clip.mp4"
+}

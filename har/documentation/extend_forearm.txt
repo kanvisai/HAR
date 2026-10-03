@@ -1,0 +1,21 @@
+Extend the forearm
+==================
+id: extend_forearm
+side: the arm whose forearm swings out
+
+The forearm swings away from the upper arm. The whole arm does not have to
+finish straight. The window can run from about 0.40 s to about 1.15 s, and
+overlapping windows of the same arm are merged.
+
+In that window:
+
+  The arm is valid on most frames. A missing point is not used.
+  The elbow opens by at least 30 degrees, and it is already opening by the
+  middle of the window.
+  It starts folded (angle 100 degrees or less) and ends open but not straight
+  (angle from 95 to 135 degrees).
+  The wrist moves out from the body: at least 0.15 torso lengths farther from
+  the shoulder–hip line, or 0.08 farther from the shoulder.
+  If the arm finishes straight, that is extend_arm, not this action.
+
+It does not depend on another action.

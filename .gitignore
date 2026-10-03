@@ -11,3 +11,14 @@ HAR/salida/
 # Credenciales
 .env
 HAR_en/temp_output/
+# Modelo YOLO
+*.pt
+
+# Entornos virtuales
+.venv/
+venv/
+
+# Archivos temporales
+__pycache__/
+*.pyc
+har/temp_output/

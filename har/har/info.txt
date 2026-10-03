@@ -1,0 +1,92 @@
+Program information
+===================
+
+Marks six gestures from a skeleton that is already computed.
+
+  extend_arm            Extend the arm
+  extend_forearm        Extend the forearm
+  retract_arm           Retract the arm
+  turn_torso            Turn the torso
+  crouch                Crouch a little
+  steady_wrist_waist    Steady wrist-to-waist distance
+
+Folder 3 is people putting objects into a cart: reach, fold, turn, and a small crouch.
+Folder 4 is people taking something from a shelf: the arm goes out, comes back,
+then the wrist stays at a steady distance from the waist while they walk with it.
+Folder 0 is people walking past. It is the control set.
+
+Input
+-----
+poses_full.npy with shape (frames, 8, 2), from 0_npy, 3_npy or 4_npy.
+Coordinates normalized from 0 to 1, the y axis grows downward.
+A point YOLO did not see is NaN. It is not filled in and it is not drawn.
+
+Points, in this order:
+  0 left shoulder
+  1 right shoulder
+  2 left elbow
+  3 right elbow
+  4 left wrist
+  5 right wrist
+  6 left hip
+  7 right hip
+
+Side is the person's, not the image's. Distances are measured in torso lengths
+(from the shoulder center to the hip center). The x axis is scaled by the
+frame width divided by the height, so a horizontal arm is not measured short.
+
+The npy lives in <set>_npy/<clip>/poses_full.npy. clip.mp4 and meta.json live
+in <set>/<clip>/. fps comes from meta.json; if it is missing, 12.5 is used.
+The skeleton is smoothed with a 3-frame median. A missing point stays missing.
+
+What is drawn
+-------------
+Only points that are present in the npy. No bone is drawn to a missing joint.
+
+Programs
+--------
+detect_json.py writes actions.json next to the npy and temp_output/actions.json.
+visualize_ske.py opens the skeleton window and writes temp_output/skeleton.mp4.
+visualize_sup.py opens the video window and also writes actions.json,
+skeleton.mp4 and overlay.mp4 into temp_output. The list on the right shows
+each action when it ends, with its time range. A row stays "In progress"
+while the action is still going.
+
+Space pauses. Arrows, or A and D, move one frame. Q closes.
+
+actions_config.json turns each id on or off. All six start enabled.
+The detail of each action is in documentation/.
+
+Actions
+-------
+extend_arm
+  Extend the arm.
+  Over about 0.4 to 1.15 seconds the elbow opens, or a straight arm reaches
+  away from the torso. From above, a hand that finishes far from the body
+  counts even if the elbow stays under 130 degrees.
+
+extend_forearm
+  Extend the forearm.
+  The elbow opens and the forearm swings out, but the arm does not finish
+  straight. The angle starts at 100 degrees or less and ends between 95 and 135.
+
+retract_arm
+  Retract the arm.
+  Over about 0.4 to 1.15 seconds the elbow closes, or the hand comes back
+  to the body after being out. A reach away from the torso does not count.
+
+turn_torso
+  Turn the torso.
+  The shoulders go from facing the camera to a side view, or back.
+  The shoulder width has to change by at least 0.20 torso lengths.
+
+crouch
+  Crouch a little.
+  The torso gets shorter in the image while the person stays about the same
+  size, so walking toward or away from the camera does not count.
+
+steady_wrist_waist
+  Steady wrist-to-waist distance.
+  For about a second or more, the wrist stays at nearly the same distance
+  from its hip. The spread in that stretch is under 0.06 torso lengths.
+  This is the hand held still while the person moves with an object.

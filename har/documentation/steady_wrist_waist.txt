@@ -1,0 +1,20 @@
+Steady wrist-to-waist distance
+==============================
+id: steady_wrist_waist
+side: the wrist that stays put
+
+The distance from the wrist to its hip barely changes, for at least about one
+second. This is the hand held still, for example after taking an object and
+walking with it.
+
+In that stretch, frame by frame:
+
+  The arm is valid on at least 85 percent of the frames. A missing point is
+  not filled in.
+  The highest and the lowest wrist-to-hip distance differ by less than 0.06
+  torso lengths.
+  A frame where the distance starts to change ends the action. Nearby
+  stretches are not joined across a long gap.
+
+An arm that is reaching or folding moves more than 0.06 torso lengths and
+does not count. It does not depend on another action.

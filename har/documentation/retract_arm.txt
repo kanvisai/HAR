@@ -1,0 +1,25 @@
+Retract the arm
+===============
+id: retract_arm
+side: the arm that closes or comes back
+
+The fold often lasts close to a second. The window can run from about 0.40 s
+to about 1.15 s, and overlapping windows of the same arm are merged.
+
+In that window, either the elbow closes, or the hand comes back to the body.
+
+Closing:
+  The arm is valid on most frames. A missing point is not used.
+  The elbow closes by at least 35 degrees, and it keeps closing through the window.
+  It starts open (angle 145 degrees or more) and ends bent (angle 120 degrees
+  or less), but not collapsed (above 45 degrees).
+  The wrist ends at least 0.10 torso lengths closer to the shoulder than it started.
+  If the wrist travels out from the torso, it is a reach, not a retract.
+
+Coming back:
+  The wrist starts away from the shoulder–hip line and ends near the body,
+  moving in by at least 0.30 torso lengths. A short gap where the arm is not
+  seen does not cancel it.
+
+Distances use the frame's width-to-height ratio.
+It does not depend on another action.

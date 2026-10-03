@@ -1,0 +1,19 @@
+Crouch a little
+===============
+id: crouch
+side: both
+
+The person bends down a little, for example toward a cart. The window can run
+from about 0.40 s to about 0.90 s.
+
+In that window:
+
+  Both shoulders and both hips are seen on most frames.
+  The vertical distance from the shoulders to the hips shrinks by at least
+  18 percent, and by at least 0.012 in normalized image height.
+  The whole torso stays about the same size in the image (the scale changes
+  by less than about 12 percent). Walking toward the camera makes the body
+  larger, and walking away makes it smaller, so those do not count.
+  The shortening is already under way at the middle of the window.
+
+It does not depend on another action.

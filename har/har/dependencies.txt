@@ -1,0 +1,11 @@
+# Libraries. Install with: pip install -r dependencies.txt
+#
+# numpy reads poses_full.npy and computes the skeleton measurements.
+# opencv-python opens the window, reads the mp4 and writes the temp_output videos.
+# pillow draws the list text.
+#
+# DejaVu Sans is not installed with pip. It has to be on the system:
+#   /usr/share/fonts/truetype/dejavu/DejaVuSans.ttf
+numpy==2.4.4
+opencv-python==4.13.0.92
+pillow==10.2.0

@@ -1,0 +1,37 @@
+{
+    "clip_name": "12Diciembre2025_12Diciembre2025_Pasillo_Conservas_Conservas_tarde_000953_001016_3",
+    "video_source": "/home/angel/videos/12Diciembre2025/12Diciembre2025/Pasillo_Conservas/Conservas_tarde.avi",
+    "row_csv": 13,
+    "t_start": "00:09:53",
+    "t_end": "00:10:16",
+    "clip_duration": 23,
+    "fps": 12.25,
+    "frame_count": 281,
+    "video_frame_count": 282,
+    "min_valid_frames": 225,
+    "cat": "3",
+    "yolo_model": "/home/angel/IAModel/experiments/engine/yolo11x-pose.engine",
+    "yolo_backend": "engine",
+    "users": [
+        {
+            "track_id": 1974,
+            "valid_pct": 100.0,
+            "rel": 1.0,
+            "valid_frames": 250,
+            "total_frames": 250,
+            "poses_full_count": 250,
+            "poses_filtered_count": 250,
+            "passes_filters": true,
+            "keypoint_confidence_avg": 0.987,
+            "occlusion_ratio": 0.0,
+            "bbox_aspect_ratio": 1.603,
+            "subject_velocity": 0.00441,
+            "clothes": {
+                "top": "RGB(103,74,63)",
+                "bottom": "RGB(74,41,48)"
+            },
+            "user_cat": 3
+        }
+    ],
+    "clip_video": "clip.mp4"
+}

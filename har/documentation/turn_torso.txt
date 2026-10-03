@@ -1,0 +1,19 @@
+Turn the torso
+==============
+id: turn_torso
+side: both
+
+The shoulders turn from facing the camera to a side view, or from a side view
+back toward the camera. The window can run from about 0.45 s to about 1.20 s.
+
+In that window:
+
+  Both shoulders and both hips are seen on most frames.
+  Shoulder width is measured as a fraction of the torso length.
+  Facing the camera, that fraction starts at 0.48 or more and ends at 0.30
+  or less, and it falls by at least 0.20. The turn the other way uses the
+  same numbers in reverse.
+  The change is already under way at the middle of the window.
+
+A person who keeps facing the camera while walking down the aisle does not count.
+It does not depend on another action.

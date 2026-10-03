@@ -1,0 +1,37 @@
+{
+    "clip_name": "12Diciembre2025_12Diciembre2025_Pasillo_Legumbres_Legumbres_manana_000322_000342_4",
+    "video_source": "/home/angel/videos/12Diciembre2025/12Diciembre2025/Pasillo_Legumbres/Legumbres_manana.avi",
+    "row_csv": 11,
+    "t_start": "00:03:22",
+    "t_end": "00:03:42",
+    "clip_duration": 20,
+    "fps": 12.25,
+    "frame_count": 206,
+    "video_frame_count": 245,
+    "min_valid_frames": 196,
+    "cat": "4",
+    "yolo_model": "/home/angel/IAModel/experiments/engine/yolo11x-pose.engine",
+    "yolo_backend": "engine",
+    "users": [
+        {
+            "track_id": 2165,
+            "valid_pct": 70.1,
+            "rel": 0.7,
+            "valid_frames": 143,
+            "total_frames": 204,
+            "poses_full_count": 204,
+            "poses_filtered_count": 143,
+            "passes_filters": false,
+            "keypoint_confidence_avg": 0.879,
+            "occlusion_ratio": 15.2,
+            "bbox_aspect_ratio": 2.126,
+            "subject_velocity": 0.00803,
+            "clothes": {
+                "top": "RGB(86,75,67)",
+                "bottom": "RGB(57,47,44)"
+            },
+            "user_cat": 4
+        }
+    ],
+    "clip_video": "clip.mp4"
+}

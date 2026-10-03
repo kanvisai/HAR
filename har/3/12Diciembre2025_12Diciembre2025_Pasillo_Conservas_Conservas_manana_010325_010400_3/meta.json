@@ -1,0 +1,37 @@
+{
+    "clip_name": "12Diciembre2025_12Diciembre2025_Pasillo_Conservas_Conservas_manana_010325_010400_3",
+    "video_source": "/home/angel/videos/12Diciembre2025/12Diciembre2025/Pasillo_Conservas/Conservas_manana.avi",
+    "row_csv": 45,
+    "t_start": "01:03:25",
+    "t_end": "01:04:00",
+    "clip_duration": 35,
+    "fps": 12.25,
+    "frame_count": 391,
+    "video_frame_count": 429,
+    "min_valid_frames": 343,
+    "cat": "3",
+    "yolo_model": "/home/angel/IAModel/experiments/engine/yolo11x-pose.engine",
+    "yolo_backend": "engine",
+    "users": [
+        {
+            "track_id": 1593,
+            "valid_pct": 96.7,
+            "rel": 0.97,
+            "valid_frames": 378,
+            "total_frames": 391,
+            "poses_full_count": 391,
+            "poses_filtered_count": 378,
+            "passes_filters": true,
+            "keypoint_confidence_avg": 0.937,
+            "occlusion_ratio": 0.0,
+            "bbox_aspect_ratio": 1.466,
+            "subject_velocity": NaN,
+            "clothes": {
+                "top": "RGB(71,59,54)",
+                "bottom": "RGB(71,58,52)"
+            },
+            "user_cat": 3
+        }
+    ],
+    "clip_video": "clip.mp4"
+}
