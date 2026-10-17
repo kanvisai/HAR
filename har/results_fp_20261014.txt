@@ -1,0 +1,52 @@
+FP_20261014 with the updated rule, including c100.
+Rule
+  hand to the body (out >= 1.0 s and against the hip >= 2.0 s)   inconclusive
+  visible under 2.0 s                                             inconclusive
+  stop >= 2.5 s and walk < 2.0 s                                  c100
+  stop >= 2.5 s and walk >= 2.0 s                                 c1
+  else walk >= 2.0 s and carry >= 2.0 s                           c5
+  else walk >= 2.0 s                                              c0
+  anything shorter                                                inconclusive
+c100 is a person who stays still. c0 and c5 may swap.
+Looking down is not used. The skeleton has no head point.
+
+clip	person	category
+clip_buffer_01	01	c1
+clip_buffer_01	02	c1
+clip_buffer_02	01	inconclusive
+clip_buffer_03	01	inconclusive
+clip_buffer_04	01	inconclusive
+clip_buffer_04	02	inconclusive
+clip_buffer_04	03	c100
+clip_buffer_05	01	c100
+clip_buffer_05	02	inconclusive
+clip_buffer_05	03	c100
+clip_buffer_05	04	inconclusive
+clip_buffer_06	01	c100
+clip_buffer_06	02	c5
+clip_buffer_07	01	inconclusive
+clip_buffer_07	02	inconclusive
+clip_buffer_08	01	c100
+clip_buffer_09	01	c0
+clip_buffer_09	02	inconclusive
+clip_buffer_09	03	inconclusive
+clip_buffer_09	04	inconclusive
+clip_buffer_09	05	inconclusive
+clip_buffer_09	06	inconclusive
+clip_buffer_10	01	inconclusive
+clip_buffer_11	01	inconclusive
+clip_buffer_11	02	c1
+clip_buffer_11	03	inconclusive
+clip_buffer_12	01	inconclusive
+clip_buffer_12	02	inconclusive
+clip_buffer_12	03	inconclusive
+clip_buffer_12	04	inconclusive
+clip_buffer_12	05	inconclusive
+clip_buffer_13	01	inconclusive
+clip_buffer_13	02	c0
+clip_buffer_13	03	inconclusive
+clip_buffer_13	04	inconclusive
+clip_buffer_13	05	inconclusive
+clip_buffer_14	01	inconclusive
+clip_buffer_15	01	c100
+clip_buffer_15	02	inconclusive

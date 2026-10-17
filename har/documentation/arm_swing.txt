@@ -1,0 +1,7 @@
+arm_swing — Swing the arm
+
+While the person is walking, one wrist moves closer to its hip and then
+farther away, or the other way around. The spread is at least 0.16 torso
+lengths in about 0.8 seconds, and the distance changes direction.
+
+This is the free arm of category 0. A hand that stays still does not count.

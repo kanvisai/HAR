@@ -1,0 +1,8 @@
+hand_up — Hand up
+
+One hand rises from below the chest to about shoulder height. The rise is at
+least 0.35 of the torso height and finishes at 0.95 or more, in about 0.3 to
+0.8 seconds.
+
+The skeleton has no head point, so this is the shoulder, not the face. It is
+the short spontaneous gesture seen in category 0.

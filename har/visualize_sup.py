@@ -9,7 +9,7 @@ Open the video window with the skeleton and also write into temp_output
 On the right, each action appears when it ends, with its time range.
 
 Usage:
-  python visualize_sup.py /path/3_npy/<clip>/poses_full.npy
+  python visualize_sup.py /path/videos/<cat>/<clip>/user_N/poses_full.npy
 
 Space: pause. Arrows: one frame. Q: quit.
 """

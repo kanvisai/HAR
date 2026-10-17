@@ -19,12 +19,13 @@ ACTIVE_COLOR = (40, 40, 255)
 TEXT_COLOR = (245, 245, 245)
 
 ACTION_COLORS = {
-    "extend_arm": (40, 180, 255),
-    "extend_forearm": (80, 220, 255),
-    "retract_arm": (180, 80, 255),
-    "turn_torso": (80, 200, 80),
-    "crouch": (40, 140, 220),
-    "steady_wrist_waist": (220, 180, 40),
+    "walk": (80, 200, 120),
+    "stop": (40, 140, 220),
+    "turn_torso": (80, 180, 80),
+    "arm_swing": (40, 180, 255),
+    "carry": (220, 180, 40),
+    "hand_up": (180, 80, 255),
+    "hand_to_body": (40, 40, 220),
 }
 
 SIDE_BONES = {

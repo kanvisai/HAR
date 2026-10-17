@@ -1,0 +1,47 @@
+Typical gestures in categories 0, 1 and 5
+
+These notes come from example clips in /home/ignacio/Escritorio/Company/videos.
+The camera sits at the end of the aisle, looking along it from above.
+Category 0 in that set is the beer aisle only. Categories 1 and 5 also include
+jams, canned goods and pulses. This is what the body does in those examples.
+It is not a detector yet.
+
+Category labels
+  0  A person walks along the aisle and does nothing more than walk, plus an
+     occasional spontaneous gesture.
+  1  The customer walks along the aisle, stops to look, and does not buy.
+  5  The customer walks along the aisle without stopping to look or to buy,
+     but is already carrying objects.
+
+0. Walks through
+  The clips are about 10 to 20 seconds. The person enters and leaves without
+  stopping. The arms hang and swing with the step. The hands stay near the
+  thigh. The torso follows the direction of travel and does not turn toward
+  the shelf. Sometimes there is a short loose gesture: one hand goes up to
+  the face or the head, or both hands rest on a cart handle while the person
+  keeps walking. There is no stop, and no arm reaching out to take a product.
+
+1. Stops to look, and does not buy
+  These clips are longer, often 15 to 35 seconds, and they appear in several
+  aisles. The person arrives walking, slows down, and stays beside the shelf.
+  The torso turns toward the shelf and the head drops toward the products.
+  The arms stay down, or one hand rests on the cart or the basket. Sometimes
+  there is a small lean, but the reach-grab-return cycle is not there. Then
+  the person turns back toward the aisle and walks on. If they have a cart or
+  a basket, it stops with them.
+
+5. Walks through while carrying something
+  The travel is the same as category 0: the person keeps walking and does not
+  stand in front of the shelf. The difference is in the arms. At least one
+  arm is bent and holds a basket, a bag or a product, and that hand moves
+  with the body instead of swinging. Sometimes both hands are together in
+  front, on a basket, or pushing a cart, and the cart does not stop to look.
+  There is no sustained turn toward the shelf and no reach to take a product.
+
+What separates them in these examples
+  Categories 0 and 5 do not stop. Category 1 does, and turns the torso toward
+  the shelf.
+  Category 0 has free arms. Category 5 has at least one arm occupied and
+  steady relative to the body.
+  Carrying a cart or a basket is not enough to tell them apart, because it
+  appears in all three.

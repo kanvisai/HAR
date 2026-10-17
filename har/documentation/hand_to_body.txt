@@ -1,0 +1,9 @@
+hand_to_body — Hand to the body
+
+A hand is at least 0.50 torso lengths out from the shoulder–hip line for
+1 second or more, and a hand is also within 0.25 torso lengths of the hip
+for 2 seconds or more. The two do not have to be the same arm.
+
+This is the pattern that separates category 6 from a walk-through, a stop
+to look, or someone already carrying a bag. When it is present, the clip is
+not called c0, c1 or c5.

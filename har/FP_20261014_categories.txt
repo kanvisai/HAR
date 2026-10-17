@@ -1,0 +1,163 @@
+FP_20261014 categories from the gestures in HAR_c0_c1_c5.
+
+A stop of at least 2.5 s is c1.
+Otherwise a walk of at least 2 s with a steady held hand of at least 2 s is c5.
+Otherwise a walk of at least 2 s, with no stop and no held hand, is c0.
+A person visible for under 2 s, or with only shorter gestures, is inconclusive.
+Looking down is not used: the skeleton has no head point.
+
+clip_buffer_01  person 01  c1
+    a stop of at least 2.5 s
+    visible 9.1s; walk 2.0s, stop 3.8s, turn_torso 1.5s, arm_swing 1.0s, carry 1.0s
+
+clip_buffer_01  person 02  c1
+    a stop of at least 2.5 s
+    visible 8.2s; walk 4.1s, stop 2.5s, turn_torso 4.0s, arm_swing 3.7s
+
+clip_buffer_02  person 01  c1
+    a stop of at least 2.5 s
+    visible 17.0s; walk 2.2s, stop 13.1s, turn_torso 1.1s
+
+clip_buffer_03  person 01  c1
+    a stop of at least 2.5 s
+    visible 17.5s; walk 4.9s, stop 2.9s, turn_torso 4.9s, arm_swing 4.9s, hand_up 0.8s
+
+clip_buffer_04  person 01  c1
+    a stop of at least 2.5 s
+    visible 68.4s; walk 7.5s, stop 50.7s, turn_torso 8.8s, arm_swing 8.0s, carry 2.6s
+
+clip_buffer_04  person 02  inconclusive
+    the person is visible for under 2 seconds
+    visible 1.9s; walk 1.8s, turn_torso 0.7s, arm_swing 2.4s
+
+clip_buffer_04  person 03  c1
+    a stop of at least 2.5 s
+    visible 3.6s; stop 3.6s
+
+clip_buffer_05  person 01  c1
+    a stop of at least 2.5 s
+    visible 22.9s; stop 21.5s
+
+clip_buffer_05  person 02  inconclusive
+    the person is visible for under 2 seconds
+    visible 0.3s; none
+
+clip_buffer_05  person 03  c1
+    a stop of at least 2.5 s
+    visible 9.0s; stop 8.5s
+
+clip_buffer_05  person 04  inconclusive
+    the gestures are too short to match c0, c1 or c5
+    visible 2.4s; stop 1.3s
+
+clip_buffer_06  person 01  c1
+    a stop of at least 2.5 s
+    visible 23.1s; walk 1.9s, stop 20.7s, turn_torso 1.7s, arm_swing 2.6s, hand_up 0.8s
+
+clip_buffer_06  person 02  c5
+    walks with a hand held steady, and does not stop
+    visible 18.5s; walk 16.3s, turn_torso 5.7s, arm_swing 22.9s, carry 3.1s
+
+clip_buffer_07  person 01  c1
+    a stop of at least 2.5 s
+    visible 28.2s; walk 7.9s, stop 12.7s, turn_torso 2.7s, arm_swing 10.3s, carry 1.5s, hand_up 2.0s
+
+clip_buffer_07  person 02  inconclusive
+    the gestures are too short to match c0, c1 or c5
+    visible 3.1s; walk 1.9s, turn_torso 1.1s, arm_swing 1.5s
+
+clip_buffer_08  person 01  c1
+    a stop of at least 2.5 s
+    visible 11.7s; stop 8.9s, turn_torso 3.2s
+
+clip_buffer_09  person 01  c0
+    walks through, without a stop and without a steady held hand
+    visible 11.3s; walk 9.0s, arm_swing 12.1s, carry 1.0s
+
+clip_buffer_09  person 02  c1
+    a stop of at least 2.5 s
+    visible 38.8s; walk 17.9s, stop 19.6s, turn_torso 2.9s, arm_swing 20.3s, carry 1.1s, hand_up 1.7s
+
+clip_buffer_09  person 03  inconclusive
+    the person is visible for under 2 seconds
+    visible 0.9s; none
+
+clip_buffer_09  person 04  inconclusive
+    the person is visible for under 2 seconds
+    visible 1.1s; stop 1.1s
+
+clip_buffer_09  person 05  inconclusive
+    the gestures are too short to match c0, c1 or c5
+    visible 4.3s; walk 1.7s, turn_torso 0.7s, arm_swing 1.0s
+
+clip_buffer_09  person 06  inconclusive
+    the gestures are too short to match c0, c1 or c5
+    visible 9.7s; none
+
+clip_buffer_10  person 01  c1
+    a stop of at least 2.5 s
+    visible 12.9s; walk 5.5s, stop 4.1s, turn_torso 1.6s
+
+clip_buffer_11  person 01  inconclusive
+    the gestures are too short to match c0, c1 or c5
+    visible 2.7s; walk 1.1s, stop 1.1s, turn_torso 1.4s
+
+clip_buffer_11  person 02  c1
+    a stop of at least 2.5 s
+    visible 11.1s; walk 2.8s, stop 7.4s, turn_torso 2.7s, arm_swing 3.7s
+
+clip_buffer_11  person 03  c1
+    a stop of at least 2.5 s
+    visible 35.9s; walk 8.1s, stop 25.9s, turn_torso 3.2s, arm_swing 9.7s, carry 1.0s
+
+clip_buffer_12  person 01  c1
+    a stop of at least 2.5 s
+    visible 38.7s; walk 11.9s, stop 17.7s, turn_torso 11.6s, arm_swing 8.1s, hand_up 1.2s
+
+clip_buffer_12  person 02  c1
+    a stop of at least 2.5 s
+    visible 43.2s; walk 19.2s, stop 19.4s, turn_torso 14.3s, arm_swing 24.4s, hand_up 2.3s
+
+clip_buffer_12  person 03  c1
+    a stop of at least 2.5 s
+    visible 21.8s; walk 5.3s, stop 7.9s, arm_swing 3.7s, carry 1.0s
+
+clip_buffer_12  person 04  inconclusive
+    the person is visible for under 2 seconds
+    visible 0.4s; none
+
+clip_buffer_12  person 05  inconclusive
+    the gestures are too short to match c0, c1 or c5
+    visible 2.5s; stop 2.3s
+
+clip_buffer_13  person 01  c0
+    walks through, without a stop and without a steady held hand
+    visible 12.7s; walk 11.8s, turn_torso 3.8s, arm_swing 12.1s
+
+clip_buffer_13  person 02  c0
+    walks through, without a stop and without a steady held hand
+    visible 7.6s; walk 3.9s, arm_swing 4.5s, carry 1.0s
+
+clip_buffer_13  person 03  c1
+    a stop of at least 2.5 s
+    visible 27.6s; walk 1.6s, stop 16.8s, turn_torso 1.3s, carry 1.1s
+
+clip_buffer_13  person 04  c1
+    a stop of at least 2.5 s
+    visible 81.5s; walk 13.0s, stop 57.9s, turn_torso 4.9s, arm_swing 5.1s, carry 1.7s, hand_up 2.5s
+
+clip_buffer_13  person 05  inconclusive
+    the person is visible for under 2 seconds
+    visible 0.1s; none
+
+clip_buffer_14  person 01  c1
+    a stop of at least 2.5 s
+    visible 44.7s; walk 13.1s, stop 23.3s, turn_torso 7.9s, arm_swing 16.1s, carry 1.4s, hand_up 1.2s
+
+clip_buffer_15  person 01  c1
+    a stop of at least 2.5 s
+    visible 68.9s; stop 68.5s
+
+clip_buffer_15  person 02  inconclusive
+    the person is visible for under 2 seconds
+    visible 0.2s; none

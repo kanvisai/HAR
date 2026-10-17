@@ -3,7 +3,7 @@ Read a poses_full.npy and write the gesture JSON.
 Also leaves a copy at temp_output/actions.json, replaced on every run.
 
 Usage:
-  python detect_json.py /path/3_npy/<clip>/poses_full.npy
+  python detect_json.py /path/videos/<cat>/<clip>/user_N/poses_full.npy
 """
 from __future__ import annotations
 
@@ -29,9 +29,10 @@ def write_json(destination: Path, poses_path: Path, fps: float, video: Path | No
         "duration_s": round(n_frames / fps, 2),
         "keypoints": list(NAMES),
         "note": (
-            "Actions: extend the arm, extend the forearm, retract the arm, turn the torso, "
-            "crouch a little, and a steady wrist-to-waist distance. "
-            "A point missing from the npy is not measured."
+            "Actions: walk, stop, turn the torso, swing the arm, carry, hand up, "
+            "and hand to the body. "
+            "Categories 0, 1 and 5. A point missing from the npy is not measured. "
+            "Looking down is not measured: the skeleton has no head point."
         ),
         "not_observable_with_this_pose": list(NOT_OBSERVABLE),
         "disabled_actions": disabled_actions(),

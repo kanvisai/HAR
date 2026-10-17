@@ -1,0 +1,7 @@
+stop — Stop
+
+The hips stay in place. Over about 1.1 seconds the net move is at most 0.16
+torso lengths and the body stays inside a radius of 0.15 torso lengths.
+
+Frames already marked as a walk are left out, so a person who only walks
+through does not also get a stop. This is the pause in category 1.

@@ -1,9 +1,10 @@
 """
-Gestures from the 8-point skeleton.
+Gestures for aisle categories 0, 1 and 5.
 
-extend_arm, retract_arm, turn_torso, crouch, steady_wrist_waist.
+walk, stop, turn_torso, arm_swing, carry, hand_up.
 
 A point that is missing in the npy is not measured and is not filled in.
+There is no head point, so a downward look is not measured.
 """
 from __future__ import annotations
 
@@ -17,7 +18,7 @@ from har_actions.pose import ARM_SIDE, HIP_L, HIP_R, SHOULDER_L, SHOULDER_R, for
 
 ACTION_CONFIG = Path(__file__).resolve().parents[1] / "actions_config.json"
 
-NOT_OBSERVABLE: tuple[str, ...] = ()
+NOT_OBSERVABLE: tuple[str, ...] = ("looking down",)
 
 
 @dataclass
@@ -40,16 +41,18 @@ class Action:
 def detect(poses: np.ndarray, fps: float, aspect: float = 16 / 9) -> list[Action]:
     """Smoothed poses, shape (T, 8, 2). aspect is the frame width divided by its height."""
     features = _features(poses, fps, aspect)
+    walk_mask = _motion_mask(features, walking=True)
+    stop_mask = _motion_mask(features, walking=False)
+    stop_mask &= ~_dilate(walk_mask, 3)
     actions: list[Action] = []
-    actions += _extend_arm(features)
-    actions += _extend_forearm(features)
-    actions += _retract_arm(features)
+    actions += _from_mask(features, walk_mask, "walk", "Walk", "The hips move along the aisle.")
+    actions += _from_mask(features, stop_mask, "stop", "Stop", "The hips stay in place.")
     actions += _turn_torso(features)
-    actions += _crouch(features)
-    actions += _steady_wrist_waist(features)
-    steady = [action for action in actions if action.id == "steady_wrist_waist"]
-    rest = [action for action in actions if action.id != "steady_wrist_waist"]
-    actions = _merge(rest, gap=4) + _merge(steady, gap=2)
+    actions += _arm_swing(features, walk_mask)
+    actions += _carry(features, walk_mask)
+    actions += _hand_up(features)
+    actions += _hand_to_body(features)
+    actions = _merge(actions, gap=4)
     config = load_action_config()
     actions = [action for action in actions if action_enabled(action.id, config)]
     actions.sort(key=lambda item: (item.frame_start, item.frame_end, item.id, item.side))
@@ -109,7 +112,6 @@ def _features(poses: np.ndarray, fps: float, aspect: float = 16 / 9) -> dict:
     torso_ok &= hip_c[:, 1] > shoulder_c[:, 1] - 0.02
     scale = np.maximum(torso, 1e-3)
     frontal = np.divide(width, scale, out=np.full(t, np.nan), where=torso_ok)
-    torso_vertical = hip_c[:, 1] - shoulder_c[:, 1]
 
     arms = {}
     for side, (shoulder, elbow, wrist, hip) in ARM_SIDE.items():
@@ -132,10 +134,8 @@ def _features(poses: np.ndarray, fps: float, aspect: float = 16 / 9) -> dict:
         arms[side] = {
             "ok": ok,
             "angle": angle,
-            "forearm": forearm / scale,
             "dist_hip": np.linalg.norm(w - hip_pt, axis=1) / scale,
             "dist_axis": _segment_distance(w, s, hip_pt) / scale,
-            "dist_shoulder": np.linalg.norm(w - s, axis=1) / scale,
             "height": height,
         }
 
@@ -144,8 +144,8 @@ def _features(poses: np.ndarray, fps: float, aspect: float = 16 / 9) -> dict:
         "n": t,
         "scale": scale,
         "frontal": frontal,
-        "torso_vertical": torso_vertical,
         "torso_ok": torso_ok,
+        "hip": hip_c,
         "arms": arms,
     }
 
@@ -165,6 +165,51 @@ def _segment_distance(point: np.ndarray, start: np.ndarray, end: np.ndarray) -> 
         t = np.clip(np.sum((point - start) * segment, axis=1) / denom, 0.0, 1.0)
     projection = start + t[:, None] * segment
     return np.linalg.norm(point - projection, axis=1)
+
+
+def _dilate(mask: np.ndarray, radius: int) -> np.ndarray:
+    if radius <= 0 or not mask.any():
+        return mask.copy()
+    out = mask.copy()
+    idx = np.flatnonzero(mask)
+    for shift in range(1, radius + 1):
+        out[np.clip(idx - shift, 0, len(mask) - 1)] = True
+        out[np.clip(idx + shift, 0, len(mask) - 1)] = True
+    return out
+
+
+def _motion_mask(features: dict, walking: bool) -> np.ndarray:
+    """True where the hips are travelling, or where they stay put."""
+    hip = features["hip"]
+    scale = features["scale"]
+    ok = features["torso_ok"]
+    n = features["n"]
+    window = max(8, int(round((0.90 if walking else 1.10) * features["fps"])))
+    mask = np.zeros(n, dtype=bool)
+    limit = n - window + 1
+    for i in range(max(0, limit)):
+        if ok[i : i + window].mean() < 0.70:
+            continue
+        pts = hip[i : i + window]
+        finite = np.isfinite(pts).all(axis=1)
+        if finite.mean() < 0.70:
+            continue
+        moved = float(np.linalg.norm(pts[-1] - pts[0]) / max(float(np.median(scale[i : i + window])), 1e-3))
+        center = np.median(pts[finite], axis=0)
+        radius = float(np.max(np.linalg.norm(pts[finite] - center, axis=1)) / max(float(np.median(scale[i : i + window])), 1e-3))
+        if walking and moved >= 0.45 and radius >= 0.28:
+            mask[i : i + window] = True
+        if not walking and moved <= 0.16 and radius <= 0.15:
+            mask[i : i + window] = True
+    return mask
+
+
+def _from_mask(features: dict, mask: np.ndarray, action_id: str, name: str, detail: str) -> list[Action]:
+    minimum = max(8, int(round((0.90 if action_id == "walk" else 1.10) * features["fps"])))
+    actions = []
+    for i, j in _spans(mask, minimum, gap=3):
+        actions.append(Action(action_id, name, "both", i, j, detail))
+    return actions
 
 
 def _spans(mask: np.ndarray, minimum: int, gap: int = 2) -> list[tuple[int, int]]:
@@ -231,230 +276,6 @@ def _windows(n: int, width: int, step: int = 1):
         i += step
 
 
-def _collapse_at_the_end(arm: dict, i: int, j: int, fps: float, closing: bool) -> bool:
-    angle = arm["angle"]
-    tail = max(2, int(round(0.20 * fps)))
-    earlier = max(i, j - tail)
-    if not np.isfinite(angle[i]) or not np.isfinite(angle[j]) or not np.isfinite(angle[earlier]):
-        return False
-    if closing:
-        late = float(angle[earlier] - angle[j])
-        total = float(angle[i] - angle[j])
-    else:
-        late = float(angle[j] - angle[earlier])
-        total = float(angle[j] - angle[i])
-    if total <= 0 or late / total <= 0.55:
-        return False
-    hold = max(3, int(round(0.24 * fps)))
-    after = arm["ok"][j + 1 : j + 1 + hold]
-    return len(after) == 0 or float(after.mean()) < 0.5
-
-
-def _gesture_widths(fps: float):
-    short = max(5, int(round(0.40 * fps)))
-    long = max(short + 1, int(round(1.15 * fps)))
-    return range(short, long + 1, 3)
-
-
-def _extend_arm(features: dict) -> list[Action]:
-    actions = []
-    for side, arm in features["arms"].items():
-        dist = arm["dist_shoulder"]
-        angle = arm["angle"]
-        for width in _gesture_widths(features["fps"]):
-            for i, j in _windows(features["n"], width, step=2):
-                if not arm["ok"][i] or not arm["ok"][j]:
-                    continue
-                if arm["ok"][i : j + 1].mean() < 0.75:
-                    continue
-                if angle[j] - angle[i] < 35:
-                    continue
-                if angle[i] > 125:
-                    continue
-                # From above, the hand can finish far from the body while the
-                # elbow stays under 130 degrees. That is still the arm extending.
-                reaches_out = (
-                    arm["dist_axis"][j] >= 0.55
-                    and arm["dist_axis"][j] - arm["dist_axis"][i] >= 0.30
-                    and angle[j] >= 100
-                )
-                if angle[j] < 130 and not reaches_out:
-                    continue
-                if dist[j] - dist[i] < 0.10:
-                    continue
-                mid = (i + j) // 2
-                if angle[mid] - angle[i] < 12:
-                    continue
-                if angle[mid] < angle[i] - 15 or angle[j] < angle[mid] - 8:
-                    continue
-                if _collapse_at_the_end(arm, i, j, features["fps"], closing=False):
-                    continue
-                actions.append(
-                    Action(
-                        "extend_arm",
-                        "Extend the arm",
-                        side,
-                        i,
-                        j,
-                        (
-                            f"The {side} elbow opens and the hand moves away from the shoulder "
-                            f"(the angle goes from {angle[i]:.0f}° to {angle[j]:.0f}°)."
-                        ),
-                    )
-                )
-        actions.extend(_reach_out(features, side, arm))
-    return actions
-
-
-def _reach_out(features: dict, side: str, arm: dict) -> list[Action]:
-    """A straight arm that leaves the torso. From above, the elbow is already open."""
-    actions = []
-    away = arm["dist_axis"]
-    angle = arm["angle"]
-    for width in _gesture_widths(features["fps"]):
-        for i, j in _windows(features["n"], width, step=2):
-            if not arm["ok"][i] or not arm["ok"][j]:
-                continue
-            if arm["ok"][i : j + 1].mean() < 0.75:
-                continue
-            if away[i] > 0.35 or away[j] < 0.50:
-                continue
-            if away[j] - away[i] < 0.35:
-                continue
-            if angle[i] < 130 or angle[j] < 125:
-                continue
-            mid = (i + j) // 2
-            if away[mid] - away[i] < 0.12:
-                continue
-            actions.append(
-                Action(
-                    "extend_arm",
-                    "Extend the arm",
-                    side,
-                    i,
-                    j,
-                    f"The {side} arm reaches out, away from the body.",
-                )
-            )
-    return actions
-
-
-def _extend_forearm(features: dict) -> list[Action]:
-    """The elbow opens and the forearm swings out, without the whole arm ending straight."""
-    actions = []
-    for side, arm in features["arms"].items():
-        angle = arm["angle"]
-        away = arm["dist_axis"]
-        dist = arm["dist_shoulder"]
-        for width in _gesture_widths(features["fps"]):
-            for i, j in _windows(features["n"], width, step=2):
-                if not arm["ok"][i] or not arm["ok"][j]:
-                    continue
-                if arm["ok"][i : j + 1].mean() < 0.70:
-                    continue
-                opening = float(angle[j] - angle[i])
-                if opening < 30:
-                    continue
-                if angle[i] > 100 or angle[j] < 95 or angle[j] > 135:
-                    continue
-                # A fully straightened arm, or a hand that ends far from the body, is extend_arm.
-                if angle[j] >= 130 and opening >= 35 and dist[j] - dist[i] >= 0.10:
-                    continue
-                if away[j] >= 0.55 and away[j] - away[i] >= 0.30:
-                    continue
-                if away[j] - away[i] < 0.15 and dist[j] - dist[i] < 0.08:
-                    continue
-                mid = (i + j) // 2
-                if angle[mid] - angle[i] < 10:
-                    continue
-                if _collapse_at_the_end(arm, i, j, features["fps"], closing=False):
-                    continue
-                actions.append(
-                    Action(
-                        "extend_forearm",
-                        "Extend the forearm",
-                        side,
-                        i,
-                        j,
-                        (
-                            f"The {side} forearm swings out as the elbow opens "
-                            f"(the angle goes from {angle[i]:.0f}° to {angle[j]:.0f}°)."
-                        ),
-                    )
-                )
-    return actions
-
-
-def _retract_arm(features: dict) -> list[Action]:
-    actions = []
-    for side, arm in features["arms"].items():
-        dist = arm["dist_shoulder"]
-        angle = arm["angle"]
-        for width in _gesture_widths(features["fps"]):
-            for i, j in _windows(features["n"], width, step=2):
-                if not arm["ok"][i] or not arm["ok"][j]:
-                    continue
-                if arm["ok"][i : j + 1].mean() < 0.75:
-                    continue
-                if angle[i] - angle[j] < 35:
-                    continue
-                if angle[i] < 145 or angle[j] > 120 or angle[j] <= 45:
-                    continue
-                if dist[i] - dist[j] < 0.10:
-                    continue
-                if arm["dist_axis"][j] - arm["dist_axis"][i] > 0.20:
-                    continue
-                mid = (i + j) // 2
-                if angle[i] - angle[mid] < 12:
-                    continue
-                if angle[mid] > angle[i] + 15 or angle[j] > angle[mid] + 8:
-                    continue
-                if _collapse_at_the_end(arm, i, j, features["fps"], closing=True):
-                    continue
-                actions.append(
-                    Action(
-                        "retract_arm",
-                        "Retract the arm",
-                        side,
-                        i,
-                        j,
-                        (
-                            f"The {side} elbow closes and the hand comes back toward the shoulder "
-                            f"(the angle goes from {angle[i]:.0f}° to {angle[j]:.0f}°)."
-                        ),
-                    )
-                )
-        actions.extend(_come_back(features, side, arm))
-    return actions
-
-
-def _come_back(features: dict, side: str, arm: dict) -> list[Action]:
-    actions = []
-    away = arm["dist_axis"]
-    ok = arm["ok"]
-    for width in _gesture_widths(features["fps"]):
-        for i, j in _windows(features["n"], width, step=2):
-            if not ok[i] or not ok[j]:
-                continue
-            if float(ok[i : j + 1].mean()) < 0.45:
-                continue
-            if away[i] < 0.45 or away[j] > 0.25:
-                continue
-            if away[i] - away[j] < 0.30:
-                continue
-            actions.append(
-                Action(
-                    "retract_arm",
-                    "Retract the arm",
-                    side,
-                    i,
-                    j,
-                    f"The {side} arm comes back in toward the body.",
-                )
-            )
-    return actions
-
-
 def _turn_torso(features: dict) -> list[Action]:
     """The shoulders go from facing the camera to a side view, or the other way."""
     ratio = features["frontal"]
@@ -481,7 +302,7 @@ def _turn_torso(features: dict) -> list[Action]:
                 continue
             if turning_back and ratio[mid] - ratio[i] < 0.08:
                 continue
-            direction = "sideways" if turning_away else "back toward the camera"
+            direction = "sideways, toward the shelf" if turning_away else "back toward the aisle"
             actions.append(
                 Action(
                     "turn_torso",
@@ -498,47 +319,10 @@ def _turn_torso(features: dict) -> list[Action]:
     return actions
 
 
-def _crouch(features: dict) -> list[Action]:
-    """A small bend: the torso gets shorter in the image while the person stays about the same size."""
-    vertical = features["torso_vertical"]
-    scale = features["scale"]
-    ok = features["torso_ok"]
-    actions = []
+def _arm_swing(features: dict, walk_mask: np.ndarray) -> list[Action]:
+    """A free arm swings while the person walks. The wrist distance to the hip goes up and down."""
     fps = features["fps"]
-    short = max(5, int(round(0.40 * fps)))
-    long = max(short + 1, int(round(0.90 * fps)))
-    for width in range(short, long + 1, 2):
-        for i, j in _windows(features["n"], width, step=2):
-            if ok[i : j + 1].mean() < 0.75:
-                continue
-            if scale[i] <= 0 or not np.isfinite(vertical[i]) or not np.isfinite(vertical[j]):
-                continue
-            if not (0.88 <= scale[j] / scale[i] <= 1.12):
-                continue
-            drop = float(vertical[i] - vertical[j])
-            if drop < 0.012 or drop < 0.18 * float(vertical[i]):
-                continue
-            mid = (i + j) // 2
-            if not np.isfinite(vertical[mid]) or vertical[i] - vertical[mid] < 0.4 * drop:
-                continue
-            actions.append(
-                Action(
-                    "crouch",
-                    "Crouch a little",
-                    "both",
-                    i,
-                    j,
-                    "The torso shortens in the image. The person bends down a little without walking off.",
-                )
-            )
-    return actions
-
-
-def _steady_wrist_waist(features: dict) -> list[Action]:
-    """The wrist stays at a nearly fixed distance from the hip."""
-    fps = features["fps"]
-    window = max(8, int(round(1.0 * fps)))
-    minimum = window
+    window = max(8, int(round(0.80 * fps)))
     actions = []
     for side, arm in features["arms"].items():
         distance = arm["dist_hip"]
@@ -546,27 +330,132 @@ def _steady_wrist_waist(features: dict) -> list[Action]:
         mask = np.zeros(features["n"], dtype=bool)
         limit = features["n"] - window + 1
         for i in range(max(0, limit)):
-            stretch = distance[i : i + window]
-            if float(ok[i : i + window].mean()) < 0.85:
+            if walk_mask[i : i + window].mean() < 0.60:
                 continue
+            if ok[i : i + window].mean() < 0.70:
+                continue
+            stretch = distance[i : i + window]
             if not np.isfinite(stretch).all():
                 continue
-            if float(stretch.max() - stretch.min()) > 0.06:
+            if float(stretch.max() - stretch.min()) < 0.16:
+                continue
+            delta = np.diff(stretch)
+            signs = np.sign(delta)
+            signs = signs[signs != 0]
+            if len(signs) < 2 or int(np.sum(signs[1:] * signs[:-1] < 0)) < 1:
                 continue
             mask[i : i + window] = True
-        for i, j in _spans(mask, minimum, gap=0):
-            held = distance[i : j + 1]
+        for i, j in _spans(mask, window, gap=2):
             actions.append(
                 Action(
-                    "steady_wrist_waist",
-                    "Steady wrist-to-waist distance",
+                    "arm_swing",
+                    "Swing the arm",
                     side,
                     i,
                     j,
-                    (
-                        f"The {side} wrist stays at about the same distance from the hip "
-                        f"({np.median(held):.2f} torso lengths)."
-                    ),
+                    f"The {side} arm swings with the step. The hand is not holding anything still.",
                 )
             )
+    return actions
+
+
+def _carry(features: dict, walk_mask: np.ndarray) -> list[Action]:
+    """A bent arm stays put relative to the body while the person walks."""
+    fps = features["fps"]
+    window = max(8, int(round(1.00 * fps)))
+    actions = []
+    for side, arm in features["arms"].items():
+        distance = arm["dist_hip"]
+        away = arm["dist_axis"]
+        height = arm["height"]
+        ok = arm["ok"]
+        mask = np.zeros(features["n"], dtype=bool)
+        limit = features["n"] - window + 1
+        for i in range(max(0, limit)):
+            if walk_mask[i : i + window].mean() < 0.60:
+                continue
+            if ok[i : i + window].mean() < 0.80:
+                continue
+            stretch = distance[i : i + window]
+            held_out = away[i : i + window]
+            lifted = height[i : i + window]
+            if not np.isfinite(stretch).all() or not np.isfinite(held_out).all():
+                continue
+            if float(stretch.max() - stretch.min()) > 0.07:
+                continue
+            if float(np.median(held_out)) < 0.34 and float(np.nanmedian(lifted)) < 0.42:
+                continue
+            mask[i : i + window] = True
+        for i, j in _spans(mask, window, gap=2):
+            actions.append(
+                Action(
+                    "carry",
+                    "Carry",
+                    side,
+                    i,
+                    j,
+                    f"The {side} hand stays with the body while the person walks, as if holding a basket, a bag or a product.",
+                )
+            )
+    return actions
+
+
+def _hand_to_body(features: dict) -> list[Action]:
+    """The hand leaves the torso and also spends time against the hip.
+
+    Category 6 does both. A walk-through, a stop to look, or a carried bag
+    usually does only one of them.
+    """
+    fps = features["fps"]
+    n = features["n"]
+    far = np.zeros(n, dtype=bool)
+    close = np.zeros(n, dtype=bool)
+    for arm in features["arms"].values():
+        use = arm["ok"] & np.isfinite(arm["dist_axis"]) & np.isfinite(arm["dist_hip"])
+        far |= use & (arm["dist_axis"] >= 0.50)
+        close |= use & (arm["dist_hip"] <= 0.25)
+    if far.sum() < 1.0 * fps or close.sum() < 2.0 * fps:
+        return []
+    indexes = np.flatnonzero(close)
+    return [
+        Action(
+            "hand_to_body",
+            "Hand to the body",
+            "both",
+            int(indexes[0]),
+            int(indexes[-1]),
+            "A hand moves out from the torso and also rests against the hip.",
+        )
+    ]
+
+
+def _hand_up(features: dict) -> list[Action]:
+    """The wrist rises to shoulder height. There is no head point, so the face itself is not measured."""
+    fps = features["fps"]
+    short = max(4, int(round(0.30 * fps)))
+    long = max(short + 1, int(round(0.80 * fps)))
+    actions = []
+    for side, arm in features["arms"].items():
+        height = arm["height"]
+        ok = arm["ok"]
+        for width in range(short, long + 1, 2):
+            for i, j in _windows(features["n"], width, step=2):
+                if ok[i : j + 1].mean() < 0.75:
+                    continue
+                if not np.isfinite(height[i]) or not np.isfinite(height[j]):
+                    continue
+                if height[i] > 0.55 or height[j] < 0.95:
+                    continue
+                if height[j] - height[i] < 0.35:
+                    continue
+                actions.append(
+                    Action(
+                        "hand_up",
+                        "Hand up",
+                        side,
+                        i,
+                        j,
+                        f"The {side} hand rises to about shoulder height.",
+                    )
+                )
     return actions

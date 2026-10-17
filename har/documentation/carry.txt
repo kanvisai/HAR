@@ -1,0 +1,10 @@
+carry — Carry
+
+While the person is walking, one hand stays at nearly the same distance from
+its hip. Over about 1 second that distance varies by less than 0.07 torso
+lengths. The hand also sits away from the shoulder–hip line (at least 0.34
+torso lengths) or up in front of the body (at least 0.42 of the way from the
+hip to the shoulder).
+
+This is category 5: a basket, a bag or a product held while walking. A free
+swinging arm fails the steady-distance test.

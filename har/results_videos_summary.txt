@@ -1,0 +1,13 @@
+Predicted category for every labelled folder in videos/.
+c100 is a person who stays still: stop >= 2.5 s and walk < 2.0 s.
+A hand to the body stays inconclusive. c0 and c5 may swap.
+
+folder  n   c0  c1  c5  c100  inconclusive
+0        40   30    0    8     0    2
+1        40    0   24    0     7    9
+2        40    3    8    0    10   19
+3        40    1   11    1     4   23
+4        40    8   14    1     2   15
+5        40   22    3   12     1    2
+6        70    8    5    0     0   57
+7        40    6   21    0     5    8

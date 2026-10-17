@@ -1,0 +1,7 @@
+walk — Walk
+
+The hips travel along the aisle. Over about 0.9 seconds the hip center moves
+at least 0.45 torso lengths, and the body does not stay inside a tiny patch.
+
+This is the travel shared by category 0 and category 5. Category 1 can still
+walk at the start or the end of the clip, outside the stop.

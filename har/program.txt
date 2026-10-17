@@ -1,29 +1,34 @@
 What the program does
 =====================
 
-From a skeleton that is already computed, it marks six gestures:
+From a skeleton that is already computed, it marks seven gestures for
+categories 0, 1 and 5:
 
-  extend_arm            Extend the arm
-  extend_forearm        Extend the forearm
-  retract_arm           Retract the arm
-  turn_torso            Turn the torso
-  crouch                Crouch a little
-  steady_wrist_waist    Steady wrist-to-waist distance
+  walk          Walk
+  stop          Stop
+  turn_torso    Turn the torso
+  arm_swing     Swing the arm
+  carry         Carry
+  hand_up       Hand up
+  hand_to_body  Hand to the body
 
 The detail of each one is in documentation/, in the txt named with its id.
-The libraries are in dependencies.txt. None of the six gestures depends on another.
+The libraries are in dependencies.txt. None of the seven gestures depends on another.
 
-Folder 3 is the cart: reach, fold, turn, small crouch.
-Folder 4 is the shelf: the arm extends, then retracts, then the wrist-to-waist
-distance stays steady while the person walks with the object.
-Folder 0 is people walking past, used to see what the detector marks when
-there is no cart and no shelf.
+Category 0 walks through. The arms swing, and a hand may rise briefly.
+Category 1 stops beside the shelf and may turn the torso toward it.
+Category 5 keeps walking with at least one hand steady, as if carrying something.
+
+Looking down is not marked. The skeleton has no head point.
 
 Input
 -----
 poses_full.npy with shape (frames, 8, 2). Coordinates from 0 to 1, the y axis
 grows downward. Side is the person's, not the image's. The unit of distance is
 the torso. A missing point stays missing.
+
+The file lives at videos/<category>/<clip>/user_<id>/poses_full.npy.
+clip.mp4 and meta.json live in the clip folder. fps comes from meta.json.
 
 Programs
 --------
@@ -35,4 +40,4 @@ each finished action and how long it lasted.
 
 Space pauses. Arrows, or A and D, move one frame. Q closes.
 
-actions_config.json turns each id on or off. All six start enabled.
+actions_config.json turns each id on or off. All seven start enabled.

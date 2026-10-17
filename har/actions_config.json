@@ -2,18 +2,13 @@
   "note": "Set enabled to false to turn an action off and to true to turn it back on. Save the file and run the programs again.",
   "actions": [
     {
-      "id": "extend_arm",
-      "name": "Extend the arm",
+      "id": "walk",
+      "name": "Walk",
       "enabled": true
     },
     {
-      "id": "extend_forearm",
-      "name": "Extend the forearm",
-      "enabled": false
-    },
-    {
-      "id": "retract_arm",
-      "name": "Retract the arm",
+      "id": "stop",
+      "name": "Stop",
       "enabled": true
     },
     {
@@ -22,13 +17,23 @@
       "enabled": true
     },
     {
-      "id": "crouch",
-      "name": "Crouch a little",
+      "id": "arm_swing",
+      "name": "Swing the arm",
       "enabled": true
     },
     {
-      "id": "steady_wrist_waist",
-      "name": "Steady wrist-to-waist distance",
+      "id": "carry",
+      "name": "Carry",
+      "enabled": true
+    },
+    {
+      "id": "hand_up",
+      "name": "Hand up",
+      "enabled": true
+    },
+    {
+      "id": "hand_to_body",
+      "name": "Hand to the body",
       "enabled": true
     }
   ]

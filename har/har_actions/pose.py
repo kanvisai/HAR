@@ -39,8 +39,7 @@ ARM_SIDE = {
 }
 
 ROOT = Path(__file__).resolve().parents[1]
-EXAMPLE_POSES = next((ROOT / "3_npy").glob("*/poses_full.npy"))
-EXAMPLE_VIDEO = ROOT / "3" / EXAMPLE_POSES.parent.name / "clip.mp4"
+VIDEOS = Path("/home/ignacio/Escritorio/Company/videos")
 
 
 def load_poses(path: Path) -> np.ndarray:
@@ -52,14 +51,19 @@ def load_poses(path: Path) -> np.ndarray:
 
 
 def clip_directory(poses_path: Path) -> Path:
-    """Map 3_npy/<clip>/poses_full.npy to 3/<clip>/, where clip.mp4 and meta.json live."""
-    clip_name = poses_path.parent.name
-    set_dir = poses_path.parent.parent
+    """Map videos/<cat>/<clip>/user_N/poses_full.npy to the clip folder."""
+    parent = poses_path.parent
+    if parent.name.startswith("user_"):
+        clip = parent.parent
+        if (clip / "meta.json").is_file() or (clip / "clip.mp4").is_file():
+            return clip
+    clip_name = parent.name
+    set_dir = parent.parent
     if set_dir.name.endswith("_npy"):
         source = set_dir.parent / set_dir.name[: -len("_npy")] / clip_name
         if source.is_dir():
             return source
-    return poses_path.parent
+    return parent
 
 
 def fps_and_video(poses_path: Path, video: Path | None = None) -> tuple[float, Path | None]:
@@ -67,18 +71,35 @@ def fps_and_video(poses_path: Path, video: Path | None = None) -> tuple[float, P
     clip_dir = clip_directory(poses_path)
     meta_path = clip_dir / "meta.json"
     fps = 12.5
+    meta_has_fps = False
     if meta_path.is_file():
         meta = json.loads(meta_path.read_text(encoding="utf-8"))
-        fps = float(meta.get("fps", fps))
+        if "fps" in meta:
+            fps = float(meta["fps"])
+            meta_has_fps = True
         if video is None:
-            name = meta.get("clip_video", "clip.mp4")
+            name = meta.get("clip_video") or meta.get("clip_filename") or "clip.mp4"
             candidate = clip_dir / name
             if candidate.is_file():
                 video = candidate
     if video is None:
-        candidate = clip_dir / "clip.mp4"
-        if candidate.is_file():
-            video = candidate
+        for name in ("clip.mp4", "clip_buffer.mp4"):
+            candidate = clip_dir / name
+            if candidate.is_file():
+                video = candidate
+                break
+    if video is None:
+        sibling = clip_dir.parent / f"{clip_dir.name}.mp4"
+        if sibling.is_file():
+            video = sibling
+    if video is not None and video.is_file() and not meta_has_fps:
+        import cv2
+
+        capture = cv2.VideoCapture(str(video))
+        read_fps = float(capture.get(cv2.CAP_PROP_FPS))
+        capture.release()
+        if read_fps > 1:
+            fps = read_fps
     return fps, video
 
 
@@ -116,5 +137,9 @@ def format_time(seconds: float) -> str:
 
 
 def seen_pose(pose: np.ndarray) -> np.ndarray:
-    """Copy of the pose. Points YOLO did not see are already NaN and are not invented."""
+    """Copy of the pose. Points that were not seen are already NaN and are not invented."""
     return np.array(pose, dtype=np.float64, copy=True)
+
+
+EXAMPLE_POSES = sorted(VIDEOS.glob("0/*/user_*/poses_full.npy"))[0]
+EXAMPLE_VIDEO = clip_directory(EXAMPLE_POSES) / "clip.mp4"
