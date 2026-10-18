@@ -48,11 +48,16 @@ Only points that are present in the npy. No bone is drawn to a missing joint.
 Programs
 --------
 detect_json.py writes actions.json next to the npy and temp_output/actions.json.
-visualize_ske.py opens the skeleton window and writes temp_output/skeleton.mp4.
+It also writes eval_cat_output.json in both places.
+visualize_ske.py opens the skeleton window and writes temp_output/skeleton.mp4
+and temp_output/eval_cat_output.json.
 visualize_sup.py opens the video window and also writes actions.json,
-skeleton.mp4 and overlay.mp4 into temp_output. The list on the right shows
-each action when it ends, with its time range. A row stays "In progress"
-while the action is still going.
+skeleton.mp4, overlay.mp4 and eval_cat_output.json into temp_output.
+The list on the right shows each action when it ends, with its time range.
+A row stays "In progress" while the action is still going.
+
+actions.json lists the gestures. It does not name a category.
+The category is only in eval_cat_output.json.
 
 Space pauses. Arrows, or A and D, move one frame. Q closes.
 
@@ -88,3 +93,28 @@ hand_up
 hand_to_body
   A hand is out from the torso for at least 1 second and against the hip for
   at least 2 seconds. That pattern is not called c0, c1 or c5.
+
+Category
+--------
+eval_cat_output.json names one label: c0, c1, c5, c100 or inconclusive.
+It records how long the skeleton was visible, how long each gesture lasted,
+and every rule in order. The first match wins.
+
+A frame is visible when at least one keypoint is present.
+A gesture's time is the sum of its marked segments.
+
+  hand_to_body longer than 0 s                         inconclusive
+  visible under 2.0 s                                  inconclusive
+  stop >= 2.5 s and walk < 2.0 s                       c100
+  stop >= 2.5 s and walk >= 2.0 s                      c1
+  walk >= 2.0 s and carry >= 2.0 s                     c5
+  walk >= 2.0 s                                        c0
+  anything shorter                                     inconclusive
+
+c100 is a person who stays still. c1 walked and stopped.
+c5 keeps walking while carrying. c0 keeps walking with free arms.
+c0 and c5 may swap.
+
+turn_torso, arm_swing and hand_up are measured and do not choose the category.
+Looking down is not measured. A long stop is decided before carry, so a person
+who stops for at least 2.5 s is c1 or c100 even if they also carry something.

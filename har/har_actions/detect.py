@@ -85,6 +85,122 @@ def actions_at_frame(actions: list[Action], frame: int) -> list[Action]:
     return [action for action in actions if action.frame_start <= frame <= action.frame_end]
 
 
+GESTURE_IDS = ("walk", "stop", "turn_torso", "arm_swing", "carry", "hand_up", "hand_to_body")
+
+
+def gesture_seconds(actions: list[Action], fps: float) -> dict[str, float]:
+    """Sum each gesture. Overlapping segments of the same id both count."""
+    totals = {name: 0.0 for name in GESTURE_IDS}
+    for action in actions:
+        totals[action.id] = totals.get(action.id, 0.0) + (action.frame_end - action.frame_start + 1) / fps
+    return totals
+
+
+def visible_seconds(poses: np.ndarray, fps: float) -> float:
+    """Seconds in which at least one keypoint is present."""
+    return int(np.isfinite(poses).any(axis=(1, 2)).sum()) / fps
+
+
+def evaluate_category(poses: np.ndarray, actions: list[Action], fps: float) -> dict:
+    """Choose c0, c1, c5, c100 or inconclusive from the gesture durations.
+
+    The first matching rule wins. turn_torso, arm_swing and hand_up are measured
+    and do not choose the category.
+    """
+    visible = visible_seconds(poses, fps)
+    raw = gesture_seconds(actions, fps)
+    shown = {key: round(value, 2) for key, value in raw.items()}
+    steps: list[dict] = []
+    category = None
+    decided_by = None
+    reason = None
+
+    def consider(order: int, rule: str, uses: dict, test: bool, label: str, because: str) -> None:
+        nonlocal category, decided_by, reason
+        reached = category is None
+        matched = bool(test) if reached else False
+        steps.append({
+            "order": order,
+            "rule": rule,
+            "uses": uses,
+            "reached": reached,
+            "matched": matched,
+            "category_if_matched": label,
+        })
+        if reached and matched:
+            category = label
+            decided_by = rule
+            reason = because
+
+    consider(
+        1,
+        "hand_to_body > 0 s",
+        {"hand_to_body_s": shown["hand_to_body"]},
+        raw["hand_to_body"] > 0,
+        "inconclusive",
+        "A hand is out from the torso and also against the hip. That pattern is not called c0, c1 or c5.",
+    )
+    consider(
+        2,
+        "visible < 2.0 s",
+        {"visible_s": round(visible, 2)},
+        visible < 2.0,
+        "inconclusive",
+        "The skeleton is visible for less than 2.0 seconds.",
+    )
+    consider(
+        3,
+        "stop >= 2.5 s and walk < 2.0 s",
+        {"stop_s": shown["stop"], "walk_s": shown["walk"]},
+        raw["stop"] >= 2.5 and raw["walk"] < 2.0,
+        "c100",
+        "The person stays still: the stop lasts at least 2.5 seconds and the walk lasts under 2.0 seconds.",
+    )
+    consider(
+        4,
+        "stop >= 2.5 s and walk >= 2.0 s",
+        {"stop_s": shown["stop"], "walk_s": shown["walk"]},
+        raw["stop"] >= 2.5 and raw["walk"] >= 2.0,
+        "c1",
+        "The person walked and stopped. The stop lasts at least 2.5 seconds and the walk lasts at least 2.0 seconds.",
+    )
+    consider(
+        5,
+        "walk >= 2.0 s and carry >= 2.0 s",
+        {"walk_s": shown["walk"], "carry_s": shown["carry"]},
+        raw["walk"] >= 2.0 and raw["carry"] >= 2.0,
+        "c5",
+        "The person keeps walking with one hand steady, as if carrying something.",
+    )
+    consider(
+        6,
+        "walk >= 2.0 s",
+        {"walk_s": shown["walk"]},
+        raw["walk"] >= 2.0,
+        "c0",
+        "The person keeps walking. The carry does not last 2.0 seconds, so the arms count as free.",
+    )
+    consider(
+        7,
+        "anything shorter",
+        {"walk_s": shown["walk"], "stop_s": shown["stop"], "carry_s": shown["carry"]},
+        True,
+        "inconclusive",
+        "The walk, the stop and the carry are all shorter than the thresholds.",
+    )
+
+    return {
+        "category": category,
+        "decided_by": decided_by,
+        "reason": reason,
+        "visible_s": round(visible, 2),
+        "durations_s": shown,
+        "evaluation": steps,
+        "not_used_for_the_category": ["turn_torso", "arm_swing", "hand_up", "looking down"],
+        "note": "The first matching rule wins. c0 and c5 may swap. Looking down is not measured: the skeleton has no head point.",
+    }
+
+
 def report(actions: list[Action], fps: float) -> str:
     if not actions:
         return "No gesture was marked in this clip."
