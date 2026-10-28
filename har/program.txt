@@ -33,15 +33,17 @@ clip.mp4 and meta.json live in the clip folder. fps comes from meta.json.
 Programs
 --------
 detect_json.py writes actions.json next to the npy and temp_output/actions.json.
-It also writes eval_cat_output.json in both places.
-visualize_ske.py opens the skeleton window and writes temp_output/skeleton.mp4
-and temp_output/eval_cat_output.json.
+It also writes eval_cat_output.json and summary_output.json in both places.
+visualize_ske.py opens the skeleton window and writes temp_output/skeleton.mp4,
+temp_output/eval_cat_output.json and temp_output/summary_output.json.
 visualize_sup.py opens the video window and also writes actions.json,
-skeleton.mp4, overlay.mp4 and eval_cat_output.json into temp_output.
-The list on the right shows each finished action and how long it lasted.
+skeleton.mp4, overlay.mp4, eval_cat_output.json and summary_output.json
+into temp_output. The list on the right shows each finished action and how
+long it lasted.
 
 actions.json lists the gestures. It does not name a category.
-The category is only in eval_cat_output.json.
+The category is in eval_cat_output.json.
+summary_output.json sets output to 0 for c0, c1, c5 or c100, and to 1 for inconclusive.
 
 Space pauses. Arrows, or A and D, move one frame. Q closes.
 
@@ -63,3 +65,7 @@ c100 stays still. c1 walked and stopped. c5 walks while carrying.
 c0 walks with free arms. c0 and c5 may swap.
 turn_torso, arm_swing and hand_up do not choose the category.
 Looking down is not measured. A long stop is decided before carry.
+
+summary_output.json repeats the category and adds output:
+  0  c0, c1, c5 or c100
+  1  inconclusive

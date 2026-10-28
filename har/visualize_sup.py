@@ -25,7 +25,7 @@ ROOT = Path(__file__).resolve().parent
 if str(ROOT) not in sys.path:
     sys.path.insert(0, str(ROOT))
 
-from detect_json import write_eval, write_json
+from detect_json import write_eval, write_json, write_summary
 from har_actions.detect import actions_at_frame, detect, report
 from har_actions.draw import draw_skeleton, join_list, play, recolor_active_skeleton, save_temp, skeleton_canvas
 from har_actions.pose import EXAMPLE_POSES, EXAMPLE_VIDEO, fps_and_video, frame_aspect, load_poses, smooth
@@ -59,10 +59,12 @@ def main() -> None:
 
     write_json(json_path, args.poses, fps, video, len(poses), actions)
     evaluation = write_eval(output / "eval_cat_output.json", args.poses, fps, video, poses, actions)
+    summary = write_summary(output / "summary_output.json", args.poses, evaluation)
     print(report(actions, fps))
     print()
     print(f"Category:   {evaluation['category']}")
     print(f"            {evaluation['reason']}")
+    print(f"Summary:    {summary['output']}")
     print()
 
     def build_skeleton(index: int):
@@ -73,6 +75,7 @@ def main() -> None:
 
     print(f"JSON:       {json_path}")
     print(f"Evaluation: {output / 'eval_cat_output.json'}")
+    print(f"Summary file: {output / 'summary_output.json'}")
     print(f"Skeleton:   {skeleton_path}")
     save_temp(skeleton_path, fps, len(poses), build_skeleton)
 

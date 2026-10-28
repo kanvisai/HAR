@@ -19,7 +19,7 @@ ROOT = Path(__file__).resolve().parent
 if str(ROOT) not in sys.path:
     sys.path.insert(0, str(ROOT))
 
-from detect_json import write_eval
+from detect_json import write_eval, write_summary
 from har_actions.detect import actions_at_frame, detect
 from har_actions.draw import join_list, play, recolor_active_skeleton, save_temp, skeleton_canvas
 from har_actions.pose import EXAMPLE_POSES, fps_and_video, frame_aspect, load_poses, smooth
@@ -39,11 +39,15 @@ def main() -> None:
     fps, video = fps_and_video(args.poses)
     actions = detect(poses, fps, frame_aspect(video))
     evaluation_path = ROOT / "temp_output" / "eval_cat_output.json"
+    summary_path = ROOT / "temp_output" / "summary_output.json"
     evaluation = write_eval(evaluation_path, args.poses, fps, video, poses, actions)
+    summary = write_summary(summary_path, args.poses, evaluation)
     temporary = ROOT / "temp_output" / "skeleton.mp4"
     print(f"Category:   {evaluation['category']}")
     print(f"            {evaluation['reason']}")
+    print(f"Summary:    {summary['output']}")
     print(f"Evaluation: {evaluation_path}")
+    print(f"Summary file: {summary_path}")
     print(f"Temporary: {temporary}")
     print("Space: pause. Arrows: one frame. Q: quit.")
 

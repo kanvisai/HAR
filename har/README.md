@@ -96,13 +96,13 @@ Pass one skeleton file:
 .venv/bin/python3 visualize_sup.py /path/to/poses_full.npy
 ```
 
-`detect_json.py` writes `actions.json` next to the npy and a copy at `temp_output/actions.json`. It also writes `eval_cat_output.json` in both places.
+`detect_json.py` writes `actions.json` next to the npy and a copy at `temp_output/actions.json`. It also writes `eval_cat_output.json` and `summary_output.json` in both places.
 
-`visualize_ske.py` opens the skeleton and writes `temp_output/skeleton.mp4` and `temp_output/eval_cat_output.json`.
+`visualize_ske.py` opens the skeleton and writes `temp_output/skeleton.mp4`, `temp_output/eval_cat_output.json` and `temp_output/summary_output.json`.
 
-`visualize_sup.py` opens the video with the skeleton on top. It also writes `actions.json`, `skeleton.mp4`, `overlay.mp4` and `eval_cat_output.json` into `temp_output`. The list on the right shows each action when it ends, with its time range. A row stays "In progress" while the action is still going.
+`visualize_sup.py` opens the video with the skeleton on top. It also writes `actions.json`, `skeleton.mp4`, `overlay.mp4`, `eval_cat_output.json` and `summary_output.json` into `temp_output`. The list on the right shows each action when it ends, with its time range. A row stays "In progress" while the action is still going.
 
-`actions.json` lists the gestures. It does not name a category. The category is only in `eval_cat_output.json`.
+`actions.json` lists the gestures. It does not name a category. The category is in `eval_cat_output.json`. `summary_output.json` reduces that category to one number: `output` is 0 for `c0`, `c1`, `c5` or `c100`, and 1 for `inconclusive`.
 
 Every run replaces the files in `temp_output`.
 
@@ -123,6 +123,8 @@ A frame is visible when at least one keypoint is present. A gesture's time is th
 7. Anything shorter → `inconclusive`.
 
 `turn_torso`, `arm_swing` and `hand_up` are measured and do not choose the category. Looking down is not measured. `c0` and `c5` may swap. A long stop is decided before `carry`, so a person who stops for at least 2.5 s is `c1` or `c100` even if they also carry something.
+
+`summary_output.json` keeps the same category and adds `output`. That field is 0 when the category is `c0`, `c1`, `c5` or `c100`, and 1 when it is `inconclusive`.
 
 ## Keys
 

@@ -2,6 +2,7 @@
 Read a poses_full.npy and write the gesture JSON.
 Also leaves a copy at temp_output/actions.json, replaced on every run.
 The category evaluation is written to eval_cat_output.json.
+summary_output.json is 1 when the category is inconclusive and 0 for c0, c1, c5 or c100.
 
 Usage:
   python detect_json.py /path/videos/<cat>/<clip>/user_N/poses_full.npy
@@ -58,6 +59,23 @@ def write_eval(destination: Path, poses_path: Path, fps: float, video: Path | No
     return document
 
 
+DETECTED_CATEGORIES = {"c0", "c1", "c5", "c100"}
+
+
+def write_summary(destination: Path, poses_path: Path, evaluation: dict) -> dict:
+    """1 when the category is inconclusive, 0 for c0, c1, c5 or c100."""
+    category = evaluation["category"]
+    document = {
+        "poses": str(poses_path),
+        "category": category,
+        "output": 0 if category in DETECTED_CATEGORIES else 1,
+        "note": "output is 0 for c0, c1, c5 or c100, and 1 for inconclusive.",
+    }
+    destination.parent.mkdir(parents=True, exist_ok=True)
+    destination.write_text(json.dumps(document, ensure_ascii=False, indent=2), encoding="utf-8")
+    return document
+
+
 def main() -> None:
     parser = argparse.ArgumentParser(description="Detect gestures and write a JSON file.")
     parser.add_argument("poses", type=Path, nargs="?", default=EXAMPLE_POSES, help="poses_full.npy")
@@ -74,12 +92,16 @@ def main() -> None:
 
     document = write_json(output, args.poses, fps, video, len(poses), actions)
     evaluation = write_eval(output.with_name("eval_cat_output.json"), args.poses, fps, video, poses, actions)
+    summary = write_summary(output.with_name("summary_output.json"), args.poses, evaluation)
     temporary = ROOT / "temp_output" / "actions.json"
     temporary_eval = ROOT / "temp_output" / "eval_cat_output.json"
+    temporary_summary = ROOT / "temp_output" / "summary_output.json"
     if temporary.resolve() != output.resolve():
         write_json(temporary, args.poses, fps, video, len(poses), actions)
     if temporary_eval.resolve() != output.with_name("eval_cat_output.json").resolve():
         write_eval(temporary_eval, args.poses, fps, video, poses, actions)
+    if temporary_summary.resolve() != output.with_name("summary_output.json").resolve():
+        write_summary(temporary_summary, args.poses, evaluation)
 
     print(f"Poses:    {args.poses}")
     print(f"Video:    {video}")
@@ -92,9 +114,11 @@ def main() -> None:
     print()
     print(f"Category:   {evaluation['category']}")
     print(f"            {evaluation['reason']}")
+    print(f"Summary:    {summary['output']}")
     print()
     print(f"JSON:       {output}")
     print(f"Evaluation: {output.with_name('eval_cat_output.json')}")
+    print(f"Summary file: {output.with_name('summary_output.json')}")
     print(f"Temporary:  {temporary}")
 
 
